@@ -6,7 +6,29 @@
  */
 
 
+#include "config.h"
+#include <stdio.h>
+#include "sqlite3.h"
+#include "ficheros.h"
+
 int main(void) {
-	printf("Hello World!");
-	return 0;
+    Config cfg;
+    if (cargarConfig("data/config.cfg", &cfg) == -1) {
+        printf("Error: no se puede abrir el fichero de configuracion\n");
+        return 1;
+    }
+
+    sqlite3 *db;
+    if (abrirDB(cfg.db_ruta, &db) == -1) {
+        printf("Error: no se puede abrir la base de datos\n");
+        return 1;
+    }
+    if (crearTablas(db) == -1) {
+        printf("Error: no se pueden crear las tablas\n");
+        return 1;
+    }
+    printf("Base de datos lista\n");
+
+    sqlite3_close(db);
+    return 0;
 }
