@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include "sqlite3.h"
 #include "ficheros.h"
+#include "menu.h"
 
 int main(void) {
     Config cfg;
@@ -28,6 +29,20 @@ int main(void) {
         return 1;
     }
     printf("Base de datos lista\n");
+
+
+    int intentos = 0;
+    while (login(&cfg) == -1 && intentos < 3) {
+        printf("Usuario o contrasenya incorrectos, intentelo de nuevo\n");
+        intentos++;
+    }
+    if (intentos == 3) {
+        printf("Demasiados intentos fallidos, cerrando programa\n");
+        sqlite3_close(db);
+        return 1;
+    }
+    printf("Login correcto\n");
+    menuPrincipal(db);
 
     sqlite3_close(db);
     return 0;
