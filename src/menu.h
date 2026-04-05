@@ -10,9 +10,10 @@
 
 #include "config.h"
 #include "sqlite3.h"
+#include "clientes.h"
 
-int login(Config *cfg);
+void menuLogin(Config *cfg, sqlite3 *db);
 
-void menuPrincipal(sqlite3 *db);
+void menuPrincipal(sqlite3 *db, int id_cliente);
 
 #endif /* SRC_MENU_H_ */

@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 
-int login(Config *cfg) {
+int login(Config *cfg, sqlite3 *db) {
     char usuario[100];
     char contrasenya[100];
 
@@ -20,13 +20,52 @@ int login(Config *cfg) {
     fflush(stdout);
     scanf("%s", contrasenya);
 
-    if (strcmp(usuario, cfg->admin_usuario) == 0 && strcmp(contrasenya, cfg->admin_password) == 0) {
-        return 0;
+    char sql[200];
+    sprintf(sql, "SELECT * FROM Cliente WHERE nombre='%s' AND contrasenya='%s';", usuario, contrasenya);
+
+    sqlite3_stmt *stmt;
+    sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+    	int id = sqlite3_column_int(stmt, 0);
+    	printf("DEBUG id_cliente=%d\n", id);
+        sqlite3_finalize(stmt);
+        return id;
     }
+
+    sqlite3_finalize(stmt);
     return -1;
 }
 
-void menuPrincipal(sqlite3 *db) {
+void menuLogin(Config *cfg, sqlite3 *db) {
+    int opcion;
+    int id_cliente;
+    do {
+        printf("\n====== BIENVENIDO ======\n");
+        printf("1. INICIAR SESION\n");
+        printf("2. REGISTRARSE\n");
+        printf("3. SALIR\n");
+        printf("ELIJA UNA OPCION: ");
+        scanf("%d", &opcion);
+
+        switch(opcion) {
+        case 1:
+        	id_cliente = login(cfg, db);
+        	if (id_cliente != -1) {
+        	    menuPrincipal(db, id_cliente);  // pasar id_cliente al menú
+        	} else {
+        		printf("Usuario o contrasenya incorrectos\n");
+        	}
+        	break;
+
+        case 2: altaCliente(db); break;
+        case 3: printf("SALIENDO...\n"); break;
+        default: printf("Opcion no valida\n");
+        }
+    } while(opcion != 3);
+}
+
+void menuPrincipal(sqlite3 *db, int id_cliente) {
     int opcion;
     do {
         printf("\n====== MENU PRINCIPAL ======\n");
@@ -37,12 +76,12 @@ void menuPrincipal(sqlite3 *db) {
         printf("5. REALIZAR TRANSFERENCIA ENTRE CUENTAS\n");
         printf("6. CONSULTAR HISTORIAL DE MOVIMIENTOS\n");
         printf("7. SALIR\n");
-        printf("Elige una opcion: ");
+        printf("ELIJA UNA OPCION: ");
         scanf("%d", &opcion);
 
         switch(opcion) {
-            case 1: printf("CREAR UNA NUEVA CUENTA BANCARIA\n"); break;
-            case 2: printf("CONSULTAR EL SALDO DE MIS CUENTAS\n"); break;
+            case 1: crearCuenta(db, id_cliente); break;
+            case 2: consultarSaldo(db,id_cliente); break;
             case 3: printf("REALIZAR DEPOSITO DE DINERO\n"); break;
             case 4: printf("REALIZAR RETIRADA DE DINERO\n"); break;
             case 5: printf("REALIZAR TRANSFERENCIA ENTRE CUENTAS\n"); break;

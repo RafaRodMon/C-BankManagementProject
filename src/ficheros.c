@@ -31,6 +31,7 @@ int crearTablas(sqlite3 *db) {
 
 	sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS Cuenta ("
 			"id_cuenta INTEGER PRIMARY KEY AUTOINCREMENT,"
+			"nombreCuenta TEXT,"
 			"id_cliente INTEGER,"
 			"saldo INTEGER);", NULL, NULL, NULL);
 
