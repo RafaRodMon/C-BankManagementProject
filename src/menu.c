@@ -82,10 +82,10 @@ void menuPrincipal(sqlite3 *db, int id_cliente) {
         switch(opcion) {
             case 1: crearCuenta(db, id_cliente); break;
             case 2: consultarSaldo(db,id_cliente); break;
-            case 3: printf("REALIZAR DEPOSITO DE DINERO\n"); break;
-            case 4: printf("REALIZAR RETIRADA DE DINERO\n"); break;
-            case 5: printf("REALIZAR TRANSFERENCIA ENTRE CUENTAS\n"); break;
-            case 6: printf("CONSULTAR HISTORIAL DE MOVIMIENTOS\n"); break;
+            case 3: depositarDinero(db, id_cliente); break;
+            case 4: retirarDinero(db, id_cliente); break;
+            case 5: transferirDinero(db, id_cliente); break;
+            case 6: consultarHistorial(db, id_cliente); break;
             case 7: printf("Saliendo...\n"); break;
             default: printf("Opcion no valida\n");
         }

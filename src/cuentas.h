@@ -20,4 +20,15 @@ typedef struct {
 void crearCuenta(sqlite3 *db, int id_cliente);
 
 void consultarSaldo(sqlite3 *db, int id_cliente);
+
+void depositarDinero(sqlite3 *db, int id_cliente);
+
+void retirarDinero(sqlite3 *db, int id_cliente);
+
+void transferirDinero(sqlite3 *db, int id_cliente);
+
+void registrarMovimiento(sqlite3 *db, char *nombreCuenta, char *tipo, float importe, char *ordenante, char *beneficiaria);
+
+void consultarHistorial(sqlite3 *db, int id_cliente);
+
 #endif /* SRC_CUENTAS_H_ */

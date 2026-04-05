@@ -40,8 +40,10 @@ int crearTablas(sqlite3 *db) {
 			"id_movimiento INTEGER PRIMARY KEY AUTOINCREMENT,"
 			"id_cuenta INTEGER,"
 			"tipo TEXT,"
-			"importe INTEGER,"
-			"fecha TEXT);", NULL, NULL, NULL);
+			"importe REAL,"
+			"fecha TEXT,"
+			"cuenta_ordenante TEXT,"
+			"cuenta_beneficiaria TEXT);", NULL, NULL, NULL);
 
 	sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS Accion ("
 			"id_accion INTEGER PRIMARY KEY AUTOINCREMENT,"
