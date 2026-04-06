@@ -64,3 +64,5 @@ int crearTablas(sqlite3 *db) {
 
 	return 0;
 }
+
+
