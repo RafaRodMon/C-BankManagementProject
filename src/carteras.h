@@ -7,6 +7,7 @@
 
 #ifndef SRC_CARTERAS_H_
 #define SRC_CARTERAS_H_
+#include "sqlite3.h"
 
 typedef struct {
     int id_cartera;
@@ -19,5 +20,7 @@ typedef struct {
     int cantidad;
     float precio_compra;  // media ponderada
 } AccionCartera;
+
+void mostrarCartera(sqlite3 *db, int id_cliente);
 
 #endif /* SRC_CARTERAS_H_ */
