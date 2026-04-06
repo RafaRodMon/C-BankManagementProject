@@ -147,5 +147,140 @@ void comprarAccion(sqlite3 *db, int id_cliente) {
         cantidad, nombreAccion, precio_actual);
 }
 
+void venderAccion(sqlite3 *db, int id_cliente) {
+    int id_accion;
+    int cantidad;
+    char nombreCuenta[50];
 
+    /* Obtener cartera del cliente */
+    char sqlCartera[200];
+    sprintf(sqlCartera, "SELECT id_cartera FROM Cartera WHERE id_cliente = %d;", id_cliente);
+
+    sqlite3_stmt *stmt;
+    sqlite3_prepare_v2(db, sqlCartera, -1, &stmt, NULL);
+
+    int id_cartera = -1;
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        id_cartera = sqlite3_column_int(stmt, 0);
+    }
+    sqlite3_finalize(stmt);
+
+    if (id_cartera == -1) {
+        printf("No tienes ninguna cartera\n");
+        return;
+    }
+
+    /* Mostrar acciones que tiene el cliente */
+    char sqlMostrar[400];
+    sprintf(sqlMostrar,
+        "SELECT AC.id_accion, A.nombre, AC.cantidad, AC.precio_compra, A.precio_actual "
+        "FROM AccionCartera AC "
+        "JOIN Accion A ON AC.id_accion = A.id_accion "
+        "WHERE AC.id_cartera = %d;", id_cartera);
+    sqlite3_prepare_v2(db, sqlMostrar, -1, &stmt, NULL);
+
+    printf("\n=== TUS ACCIONES ===\n");
+    int found = 0;
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        found = 1;
+        printf("___________________________________________\n");
+        printf("ID: %d | %s | Cantidad: %d | Precio compra: %.2f | Precio actual: %.2f\n",
+            sqlite3_column_int(stmt, 0),
+            sqlite3_column_text(stmt, 1),
+            sqlite3_column_int(stmt, 2),
+            sqlite3_column_double(stmt, 3),
+            sqlite3_column_double(stmt, 4));
+    }
+    sqlite3_finalize(stmt);
+
+    if (!found) {
+        printf("No tienes acciones en tu cartera\n");
+        return;
+    }
+
+    printf("\nID de la accion a vender: \n");
+    fflush(stdout);
+    scanf("%d", &id_accion);
+    printf("Cantidad de titulos a vender: \n");
+    fflush(stdout);
+    scanf("%d", &cantidad);
+    printf("Nombre de la cuenta donde recibir el dinero: \n");
+    fflush(stdout);
+    scanf("%s", nombreCuenta);
+
+    if (cantidad <= 0) {
+        printf("La cantidad debe ser mayor que 0\n");
+        return;
+    }
+
+    /* Verificar que tiene suficientes titulos */
+    char sqlVerificar[300];
+    sprintf(sqlVerificar,
+        "SELECT cantidad FROM AccionCartera "
+        "WHERE id_cartera = %d AND id_accion = %d;", id_cartera, id_accion);
+    sqlite3_prepare_v2(db, sqlVerificar, -1, &stmt, NULL);
+
+    int cantidad_disponible = 0;
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        cantidad_disponible = sqlite3_column_int(stmt, 0);
+    }
+    sqlite3_finalize(stmt);
+
+    if (cantidad_disponible == 0) {
+        printf("No tienes esa accion en tu cartera\n");
+        return;
+    }
+    if (cantidad > cantidad_disponible) {
+        printf("No tienes suficientes titulos. Tienes %d\n", cantidad_disponible);
+        return;
+    }
+
+    /* Obtener precio actual */
+    char sqlPrecio[200];
+    sprintf(sqlPrecio, "SELECT precio_actual, nombre FROM Accion WHERE id_accion = %d;", id_accion);
+    sqlite3_prepare_v2(db, sqlPrecio, -1, &stmt, NULL);
+
+    float precio_actual = 0;
+    char nombreAccion[50] = "";
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        precio_actual = (float)sqlite3_column_double(stmt, 0);
+        strcpy(nombreAccion, (char*)sqlite3_column_text(stmt, 1));
+    }
+    sqlite3_finalize(stmt);
+
+    float ingreso_total = precio_actual * cantidad;
+
+    /* Ingresar dinero en la cuenta */
+    char sqlIngreso[300];
+    sprintf(sqlIngreso,
+        "UPDATE Cuenta SET saldo = saldo + %.2f "
+        "WHERE nombreCuenta = '%s' AND id_cliente = %d;",
+        ingreso_total, nombreCuenta, id_cliente);
+
+    int result = sqlite3_exec(db, sqlIngreso, NULL, NULL, NULL);
+    if (result != SQLITE_OK || sqlite3_changes(db) == 0) {
+        printf("Cuenta no encontrada\n");
+        return;
+    }
+
+    /* Actualizar o borrar de AccionCartera */
+    if (cantidad == cantidad_disponible) {
+        /* Vende todos: borrar la fila */
+        char sqlBorrar[300];
+        sprintf(sqlBorrar,
+            "DELETE FROM AccionCartera WHERE id_cartera = %d AND id_accion = %d;",
+            id_cartera, id_accion);
+        sqlite3_exec(db, sqlBorrar, NULL, NULL, NULL);
+    } else {
+        /* Vende parte: reducir cantidad */
+        char sqlReducir[300];
+        sprintf(sqlReducir,
+            "UPDATE AccionCartera SET cantidad = cantidad - %d "
+            "WHERE id_cartera = %d AND id_accion = %d;",
+            cantidad, id_cartera, id_accion);
+        sqlite3_exec(db, sqlReducir, NULL, NULL, NULL);
+    }
+    printf("Venta realizada: %d titulos de %s a %.2f EUR/titulo. Ingresado: %.2f EUR\n",
+        cantidad, nombreAccion, precio_actual, ingreso_total);
+}
 
