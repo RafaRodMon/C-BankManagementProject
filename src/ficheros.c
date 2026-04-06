@@ -6,7 +6,9 @@
  */
 #include <stdio.h>
 #include <stddef.h>
+#include <time.h>
 #include "sqlite3.h"
+#include "ficheros.h"
 
 int abrirDB(const char *ruta, sqlite3 **db) {
 	int result = sqlite3_open(ruta,db);
@@ -47,6 +49,18 @@ int crearTablas(sqlite3 *db) {
 
 	sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS Accion ("
 			"id_accion INTEGER PRIMARY KEY AUTOINCREMENT,"
-			"precio_actual INTEGER);", NULL, NULL, NULL);
+			"precio_actual REAL);", NULL, NULL, NULL);
+
+	sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS Cartera ("
+	        "id_cartera INTEGER PRIMARY KEY AUTOINCREMENT,"
+	        "id_cliente INTEGER);", NULL, NULL, NULL);
+
+	sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS AccionCartera ("
+	        "id_cartera INTEGER,"
+	        "id_accion INTEGER,"
+	        "cantidad INTEGER,"
+	        "precio_compra REAL,"
+	        "PRIMARY KEY (id_cartera, id_accion));", NULL, NULL, NULL);
+
 	return 0;
 }
