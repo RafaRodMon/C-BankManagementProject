@@ -7,7 +7,7 @@
 
 #ifndef SRC_ACCIONES_H_
 #define SRC_ACCIONES_H_
-#include "sqlite3.h"
+#include "../datos/sqlite3.h"
 
 typedef struct {
     int id_accion;

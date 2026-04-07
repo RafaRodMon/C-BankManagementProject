@@ -4,13 +4,11 @@
  *  Created on: 24 mar 2026
  *      Author: parsero
  */
-
-
-#include "config.h"
 #include <stdio.h>
-#include "sqlite3.h"
-#include "ficheros.h"
-#include "menu.h"
+#include "config/config.h"
+#include "datos/sqlite3.h"
+#include "datos/ficheros.h"
+#include "ui/menu.h"
 
 int main(void) {
     Config cfg;

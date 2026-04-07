@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "acciones.h"
-#include "sqlite3.h"
+#include "datos/sqlite3.h"
 
 void mostrarMercado(sqlite3 *db) {
     sqlite3_stmt *stmt;

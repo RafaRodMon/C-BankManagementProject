@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "cuentas.h"
-#include "sqlite3.h"
+#include "../datos/sqlite3.h"
 
 void crearCuenta(sqlite3 *db, int id_cliente) {
 	Cuenta c;

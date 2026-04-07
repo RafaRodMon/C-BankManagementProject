@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 #include "carteras.h"
-#include "sqlite3.h"
+#include "../datos/sqlite3.h"
 
 void mostrarCartera(sqlite3 *db, int id_cliente) {
     /* Obtener id_cartera del cliente */

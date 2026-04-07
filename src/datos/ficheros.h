@@ -9,7 +9,7 @@
 #define SRC_FICHEROS_H_
 
 #include "sqlite3.h"
-#include "config.h"
+#include "../config/config.h"
 
 int abrirDB(const char *ruta, sqlite3 **db);
 int crearTablas(sqlite3 *db);

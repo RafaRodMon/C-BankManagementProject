@@ -8,9 +8,9 @@
 #ifndef SRC_MENU_H_
 #define SRC_MENU_H_
 
-#include "config.h"
-#include "sqlite3.h"
-#include "clientes.h"
+#include "../config/config.h"
+#include "../datos/sqlite3.h"
+#include "../modelos/clientes.h"
 
 void menuLogin(Config *cfg, sqlite3 *db);
 
