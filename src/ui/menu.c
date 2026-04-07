@@ -8,6 +8,7 @@
 #include "menu.h"
 #include <stdio.h>
 #include <string.h>
+#include <sqlite3.h>
 
 int login(Config *cfg, sqlite3 *db) {
     char usuario[100];
