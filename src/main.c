@@ -12,7 +12,9 @@
 
 int main(void) {
     Config cfg;
-    if (cargarConfig("../data/config.cfg", &cfg) == -1) {
+    setvbuf(stdout, NULL, _IONBF, 0);
+
+    if (cargarConfig("data/config.cfg", &cfg) == -1) {
         printf("Error: no se puede abrir el fichero de configuracion\n");
         return 1;
     }

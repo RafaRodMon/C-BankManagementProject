@@ -20,7 +20,7 @@ void altaCliente(sqlite3 *db) {
 	printf("Introduce el nombre: \n");
 	fflush(stdout);
 	scanf("%s", nombre);
-	printf("Introduce el aoellido: \n");
+	printf("Introduce el apellido: \n");
 	fflush(stdout);
 	scanf("%s", apellido);
 	printf("Introduce el dni: \n");
