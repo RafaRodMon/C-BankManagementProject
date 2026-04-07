@@ -46,7 +46,7 @@ void mostrarCartera(sqlite3 *db, int id_cliente) {
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         found = 1;
         int id_accion       = sqlite3_column_int(stmt, 0);
-        const char nombre  = (const char)sqlite3_column_text(stmt, 1);
+        const char *nombre  = (const char *)sqlite3_column_text(stmt, 1);
         int cantidad         = sqlite3_column_int(stmt, 2);
         float precio_compra = (float)sqlite3_column_double(stmt, 3);
         float precio_actual = (float)sqlite3_column_double(stmt, 4);
