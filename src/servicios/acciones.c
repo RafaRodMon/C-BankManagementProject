@@ -284,3 +284,28 @@ void venderAccion(sqlite3 *db, int id_cliente) {
         cantidad, nombreAccion, precio_actual, ingreso_total);
 }
 
+
+void procesar_peticion(SOCKET socket_cliente) {
+    MensajeRed msg_recibido;
+    MensajeRed msg_respuesta;
+
+    // Recibimos la estructura del cliente
+    int bytes = recv(socket_cliente, (char*)&msg_recibido, sizeof(msg_recibido), 0);
+
+    if (bytes > 0) {
+        if (msg_recibido.tipo == OP_CONSULTAR_CUENTAS) {
+            // USAMOS TUS MODELOS EXISTENTES
+            // Supongamos que pasas el ID en msg_recibido.id_usuario
+            float saldo = consultar_saldo_en_db(msg_recibido.id_usuario);
+
+            msg_respuesta.tipo = OP_CONSULTAR_CUENTAS;
+            sprintf(msg_respuesta.data, "Tu saldo es: %.2f", saldo);
+
+            // Enviamos de vuelta al cliente
+            send(socket_cliente, (char*)&msg_respuesta, sizeof(msg_respuesta), 0);
+
+            // LOG (Requisito Fase 2)
+            registrar_log("Consulta de saldo realizada");
+        }
+    }
+}

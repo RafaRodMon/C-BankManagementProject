@@ -1,0 +1,3 @@
+PUERTO=8080
+DB_PATH=banco.db
+LOG_PATH=server.log
