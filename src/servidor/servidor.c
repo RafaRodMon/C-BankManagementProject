@@ -82,20 +82,34 @@ int main() {
 
     // 5. Listen
     listen(server_fd, 3);
-    printf("Servidor bancario escuchando en el puerto 8080...\n");
+    registrar_log("SERVIDOR: Sistema iniciado y escuchando peticiones.");
 
-    // Bucle de aceptación (Fase 2: Un cliente a la vez)
     while(1) {
         nuevo_socket = accept(server_fd, (struct sockaddr *)&direccion, &addrlen);
+
         if (nuevo_socket != INVALID_SOCKET) {
-            printf("Cliente conectado.\n");
-            // Aquí llamas a manejar_cliente(nuevo_socket);
+            // 1. Log de conexión
+            registrar_log("CONEXIÓN: Un cliente se ha conectado.");
+
+            // 2. Procesar la petición
+            MensajeRed msg;
+            int bytes = recv(nuevo_socket, (char*)&msg, sizeof(msg), 0);
+
+            if (bytes > 0) {
+                // Ejemplo: Si el cliente pide login
+                if (msg.tipo == OP_LOGIN) {
+                    // ... lógica de validación con SQLite ...
+                    registrar_log("OPERACIÓN: Intento de inicio de sesión.");
+                }
+                // Ejemplo: Si el cliente pide transferencia
+                else if (msg.tipo == OP_TRANSFERENCIA) {
+                    registrar_log("OPERACIÓN: Transferencia bancaria procesada.");
+                }
+            }
+
+            registrar_log("CONEXIÓN: Cliente desconectado.");
             closesocket(nuevo_socket);
         }
     }
-
-    // Limpieza al salir
-    closesocket(server_fd);
-    WSACleanup();
     return 0;
 }
