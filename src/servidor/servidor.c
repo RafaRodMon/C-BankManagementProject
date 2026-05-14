@@ -48,6 +48,9 @@ void manejar_cliente(int socket_cliente) {
 }
 
 int main() {
+	setvbuf(stdout, NULL, _IONBF, 0);
+	setvbuf(stderr, NULL, _IONBF, 0);
+
     WSADATA wsaData;
     SOCKET server_fd, nuevo_socket;
     struct sockaddr_in direccion;
