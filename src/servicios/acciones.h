@@ -7,6 +7,10 @@
 
 #ifndef SRC_ACCIONES_H_
 #define SRC_ACCIONES_H_
+
+#define WIN32_LEAN_AND_MEAN
+#include <winsock2.h>
+#include <windows.h>
 #include "../datos/sqlite3.h"
 
 typedef struct {

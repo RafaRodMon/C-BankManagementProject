@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "acciones.h"
+#include "../protocolo.h"
 #include "datos/sqlite3.h"
 
 void mostrarMercado(sqlite3 *db) {
@@ -296,7 +297,7 @@ void procesar_peticion(SOCKET socket_cliente) {
         if (msg_recibido.tipo == OP_CONSULTAR_CUENTAS) {
             // USAMOS TUS MODELOS EXISTENTES
             // Supongamos que pasas el ID en msg_recibido.id_usuario
-            float saldo = consultar_saldo_en_db(msg_recibido.id_usuario);
+            float saldo = consultarSaldo(msg_recibido.id_usuario);
 
             msg_respuesta.tipo = OP_CONSULTAR_CUENTAS;
             sprintf(msg_respuesta.data, "Tu saldo es: %.2f", saldo);

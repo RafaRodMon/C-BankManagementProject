@@ -28,6 +28,5 @@ typedef struct {
     char data[256]; // Para enviar contraseñas, montos, etc.
 } MensajeRed;
 
-#endif
 
 #endif /* SRC_PROTOCOLO_H_ */
