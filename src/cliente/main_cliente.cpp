@@ -50,32 +50,90 @@ int main() {
 
     cout << "Conectado al servidor con exito." << endl;
 
-    // --- AQUÍ IRÍA TU MENÚ DE LA FASE 1 ---
+    // --- MENÚ REAL DE TU FASE 1 ---
     int opcion = -1;
-    float saldo_cache = -1.0; // Implementación de la CACHÉ (Requisito Fase 2)
+    float saldo_cache = -1.0; // Tu implementación de caché para OP_CONSULTAR_CUENTAS
 
     while (opcion != 0) {
-        cout << "\n1. Consultar Saldo\n0. Salir\nSeleccion: ";
+        cout << "\n===================================";
+        cout << "\n     SISTEMA BANCARIO      ";
+        cout << "\n===================================";
+        cout << "\n1. Iniciar Sesion (Login)";
+        cout << "\n2. Consultar Cuentas / Saldo";
+        cout << "\n3. Realizar Transferencia";
+        cout << "\n4. Ver Historial de Transacciones";
+        cout << "\n0. Salir";
+        cout << "\n===================================";
+        cout << "\nSeleccion: ";
         cin >> opcion;
 
         if (opcion == 1) {
+            MensajeRed msg;
+            msg.tipo = OP_LOGIN;
+
+            cout << "Introduce Usuario y Contrasena (ej: usuario,clave): ";
+            cin.ignore();
+            cin.getline(msg.data, sizeof(msg.data));
+
+            send(sock, (char*)&msg, sizeof(msg), 0);
+            recv(sock, (char*)&msg, sizeof(msg), 0);
+            cout << "[Servidor]: " << msg.data << endl;
+
+        } else if (opcion == 2) {
+            // Aquí aplicas tu lógica de CACHÉ para no saturar al servidor
             if (saldo_cache != -1.0) {
-                cout << "[Memoria Local] Saldo: " << saldo_cache << endl;
+                cout << "[Memoria Local] Saldo de la cuenta: " << saldo_cache << " EUR" << endl;
             } else {
                 MensajeRed msg;
                 msg.tipo = OP_CONSULTAR_CUENTAS;
 
-                // Enviar petición
-                send(sock, (char*)&msg, sizeof(msg), 0);
+                // Si necesitas pasar un ID de cuenta, lo pides aquí:
+                cout << "Introduce el ID de cuenta a consultar: ";
+                cin >> msg.data;
 
-                // Recibir respuesta
+                send(sock, (char*)&msg, sizeof(msg), 0);
                 recv(sock, (char*)&msg, sizeof(msg), 0);
 
-                // Supongamos que guardamos el saldo en msg.data
+                // Guardamos el resultado en la caché (asumiendo que el servidor responde el número en texto)
                 saldo_cache = atof(msg.data);
-                cout << "[Servidor] Saldo actualizado: " << saldo_cache << endl;
+                cout << "[Servidor] Saldo actualizado: " << saldo_cache << " EUR" << endl;
             }
+
+        } else if (opcion == 3) {
+            MensajeRed msg;
+            msg.tipo = OP_TRANSFERENCIA;
+
+            cout << "Introduce los datos (ej: CuentaOrigen,CuentaDestino,Cantidad): ";
+            cin.ignore();
+            cin.getline(msg.data, sizeof(msg.data));
+
+            send(sock, (char*)&msg, sizeof(msg), 0);
+            recv(sock, (char*)&msg, sizeof(msg), 0);
+            cout << "[Servidor]: " << msg.data << endl;
+
+            // ¡IMPORTANTE! Al hacer una transferencia el saldo cambia,
+            // así que invalidamos la caché para que la próxima consulta pida datos reales.
+            saldo_cache = -1.0;
+
+        } else if (opcion == 4) {
+            MensajeRed msg;
+            msg.tipo = OP_HISTORIAL;
+
+            cout << "Introduce el ID de cuenta para ver su historial: ";
+            cin >> msg.data;
+
+            send(sock, (char*)&msg, sizeof(msg), 0);
+            recv(sock, (char*)&msg, sizeof(msg), 0);
+            cout << "\n--- HISTORIAL DE TRANSACCIONES ---" << endl;
+            cout << msg.data << endl;
+
+        } else if (opcion == 0) {
+            MensajeRed msg;
+            msg.tipo = OP_SALIR;
+            send(sock, (char*)&msg, sizeof(msg), 0);
+            cout << "Cerrando conexion con el banco. ¡Hasta pronto!" << endl;
         }
+
     }
 
     // 5. Limpieza
