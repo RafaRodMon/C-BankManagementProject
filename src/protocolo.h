@@ -18,6 +18,8 @@ typedef enum {
     OP_CONSULTAR_CUENTAS,
     OP_TRANSFERENCIA,
     OP_HISTORIAL,
+	OP_DEPOSITAR,
+	OP_RETIRAR,
     OP_SALIR
 } TipoOperacion;
 
