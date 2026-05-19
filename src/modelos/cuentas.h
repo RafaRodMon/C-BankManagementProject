@@ -17,18 +17,18 @@ typedef struct {
 } Cuenta;
 
 
-void crearCuenta(sqlite3 *db, int id_cliente);
+void crearCuentaAutomatica(sqlite3 *db, int id_cliente, char *msg_out);
 
-void consultarSaldo(sqlite3 *db, int id_cliente);
+void consultarSaldoRed(sqlite3 *db, int id_cliente, char *msg_out);
 
-void depositarDinero(sqlite3 *db, int id_cliente);
+void depositarDineroRed(sqlite3 *db, int id_cliente, char *nombreCuenta, float deposito, char *msg_out);
 
-void retirarDinero(sqlite3 *db, int id_cliente);
+void retirarDineroRed(sqlite3 *db, int id_cliente, char *nombreCuenta, float retiro, char *msg_out);
 
-void transferirDinero(sqlite3 *db, int id_cliente);
+void transferirDineroRed(sqlite3 *db, int id_cliente, char *ordenante, char *beneficiario, float transferencia, char *msg_out);
 
 void registrarMovimiento(sqlite3 *db, char *nombreCuenta, char *tipo, float importe, char *ordenante, char *beneficiaria);
 
-void consultarHistorial(sqlite3 *db, int id_cliente);
+void consultarHistorialRed(sqlite3 *db, int id_cliente, char *nombreCuenta, char *msg_out);
 
 #endif /* SRC_CUENTAS_H_ */
