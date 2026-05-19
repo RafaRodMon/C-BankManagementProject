@@ -63,3 +63,11 @@
 [Tue May 19 19:18:56 2026] CONEXIÓN: Un cliente se ha conectado.
 [Tue May 19 19:19:12 2026] OPERACIÓN: Registro de usuario.
 [Tue May 19 19:19:36 2026] OPERACIÓN: Consulta de Saldo.
+[Tue May 19 20:02:44 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
+[Tue May 19 20:05:03 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
+[Tue May 19 20:18:00 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
+[Tue May 19 20:20:18 2026] CONEXIÓN: Un cliente se ha conectado.
+[Tue May 19 20:21:11 2026] OPERACIÓN: Registro de nuevo usuario y cuenta.
+[Tue May 19 20:21:11 2026] REGISTRO: Fallo al insertar usuario.
+[Tue May 19 20:21:25 2026] OPERACIÓN: Intento de Login.
+[Tue May 19 20:29:22 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.

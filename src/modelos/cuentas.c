@@ -141,3 +141,34 @@ void consultarHistorialRed(sqlite3 *db, int id_cliente, char *nombreCuenta, char
     }
     sqlite3_finalize(stmt);
 }
+
+void registrarMovimiento(sqlite3 *db, char *nombreCuenta, char *tipo,
+		float importe, char *ordenante, char *beneficiaria) {
+
+    char sqlId[200];
+    snprintf(sqlId, sizeof(sqlId), "SELECT id_cuenta FROM Cuenta WHERE nombreCuenta = '%s';", nombreCuenta);
+
+    sqlite3_stmt *stmt;
+    int rc = sqlite3_prepare_v2(db, sqlId, -1, &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        return; // Si falla la consulta por lo que sea, salimos para no romper el programa
+    }
+
+    int id_cuenta = -1;
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        id_cuenta = sqlite3_column_int(stmt, 0);
+    }
+    sqlite3_finalize(stmt);
+
+    // Si no encontramos la cuenta, no podemos registrar el movimiento
+    if (id_cuenta == -1) return;
+
+    // Insertamos el movimiento usando la función datetime('now') propia de SQLite para la fecha
+    char sql[500];
+    snprintf(sql, sizeof(sql),
+        "INSERT INTO Movimiento (id_cuenta, tipo, importe, fecha, cuenta_ordenante, cuenta_beneficiaria) "
+        "VALUES (%d, '%s', %.2f, datetime('now'), '%s', '%s');",
+        id_cuenta, tipo, importe, ordenante, beneficiaria);
+
+    sqlite3_exec(db, sql, NULL, NULL, NULL);
+}

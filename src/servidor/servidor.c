@@ -18,6 +18,9 @@
 #include "../datos/ficheros.h"
 #include "../datos/sqlite3.h"
 #include "../servicios/acciones.h"
+#include "../modelos/cuentas.h"
+
+sqlite3 *db = NULL;
 
 void manejar_cliente(int socket_cliente) {
 
@@ -62,6 +65,10 @@ int main() {
         return 1;
     }
 
+    if (sqlite3_open("data/banco.db", &db) != SQLITE_OK) {
+    	printf("Error al abrir la base de datos de SQLite.\n");
+        return 1;
+    }
     // 5. Listen
     listen(server_fd, 3);
     registrar_log("SERVIDOR: Sistema iniciado y escuchando peticiones.");
@@ -102,13 +109,36 @@ int main() {
                         break;
 
                     case OP_REGISTRO:
-                        registrar_log("OPERACIÓN: Registro de usuario.");
+                        registrar_log("OPERACIÓN: Registro de nuevo usuario y cuenta.");
+
+                        // 1. Extraemos los datos que envió el cliente ("usuario,contrasenya")
                         sscanf(msg.data, "%[^,],%s", usuario, contrasenya);
 
-                        /* * TODO: Aquí insertarías el usuario en la base de datos.
-                         * if (guardar_usuario_db(usuario, contrasenya)) ...
-                         */
-                        snprintf(msg.data, sizeof(msg.data), "Usuario %s registrado correctamente.", usuario);
+                        // 2. Aquí debes insertar el usuario en tu tabla de Usuarios de SQLite.
+                        char sql_user[400];
+                        snprintf(sql_user, sizeof(sql_user),
+                                 "INSERT INTO Usuario (nombre, password) VALUES ('%s', '%s');",
+                                 usuario, contrasenya);
+
+                        int rc = sqlite3_exec(db, sql_user, NULL, NULL, NULL);
+
+                        if (rc == SQLITE_OK) {
+                            // 3. ¡MUY IMPORTANTE! Recuperamos el ID que SQLite le acaba de asignar al usuario
+                            int id_cliente_generado = (int)sqlite3_last_insert_rowid(db);
+
+                            // 4. Llamamos a tu función para crearle la cuenta bancaria automáticamente usando ese ID
+                            // Esta función escribirá el resultado ("Usuario registrado. Cuenta asignada: SBN-XXXXXX...") en msg.data
+                            crearCuentaAutomatica(db, id_cliente_generado, msg.data);
+
+                            registrar_log("REGISTRO: Usuario y cuenta creados con éxito.");
+                        } else {
+                            // Si el nombre de usuario ya existía o hubo un error de BD
+                            snprintf(msg.data, sizeof(msg.data), "Error: El nombre de usuario '%s' ya está en uso.", usuario);
+                            registrar_log("REGISTRO: Fallo al insertar usuario.");
+                        }
+
+                        // 5. El servidor envía la estructura 'msg' de vuelta (llevará el mensaje de éxito o de error)
+                        send(nuevo_socket, (char*)&msg, sizeof(msg), 0);
                         break;
 
                     case OP_CONSULTAR_CUENTAS:
