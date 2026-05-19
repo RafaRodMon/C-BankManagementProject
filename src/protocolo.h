@@ -15,6 +15,7 @@
 // Tipos de operaciones
 typedef enum {
     OP_LOGIN,
+	OP_REGISTRO,
     OP_CONSULTAR_CUENTAS,
     OP_TRANSFERENCIA,
     OP_HISTORIAL,

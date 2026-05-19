@@ -1,18 +1,14 @@
-/*
-* main_cliente.cpp
-*
-*  Created on: 14 may 2026
-*      Author: i.tejedor
-*/
 #define WIN32_LEAN_AND_MEAN
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <iostream>
 #include <string>
 #include <vector>
+#include <limits>
 #include "../protocolo.h"
 #pragma comment(lib, "ws2_32.lib")
 using namespace std;
+
 int main() {
    // 1. Inicializar Winsock
    WSADATA wsaData;
@@ -20,6 +16,7 @@ int main() {
        cerr << "Error al inicializar Winsock" << endl;
        return 1;
    }
+
    // 2. Crear el socket
    SOCKET sock = socket(AF_INET, SOCK_STREAM, 0);
    if (sock == INVALID_SOCKET) {
@@ -27,11 +24,13 @@ int main() {
        WSACleanup();
        return 1;
    }
+
    // 3. Configurar la dirección del servidor
    sockaddr_in serv_addr;
    serv_addr.sin_family = AF_INET;
-   serv_addr.sin_port = htons(8080); // El puerto que definas
-   serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1"); // IP local
+   serv_addr.sin_port = htons(8080);
+   serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+
    // 4. Conectar
    if (connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == SOCKET_ERROR) {
        cerr << "No se pudo conectar con el servidor bancario" << endl;
@@ -40,106 +39,227 @@ int main() {
        return 1;
    }
    cout << "Conectado al servidor con exito." << endl;
-   // --- MENÚ REAL DE TU FASE 1 ---
-   int opcion = -1;
-   float saldo_cache = -1.0; // Tu implementación de caché para OP_CONSULTAR_CUENTAS
-   while (opcion != 0) {
-       cout << "\n===================================";
-       cout << "\n     SISTEMA BANCARIO      ";
-       cout << "\n===================================";
-       cout << "\n1. Iniciar Sesion (Login)";
-       cout << "\n2. Consultar Cuentas / Saldo";
-       cout << "\n3. Realizar Transferencia";
-       cout << "\n4. Ver Historial de Transacciones";
-       cout << "\n5. Depositar Dinero";
-       cout << "\n6. Retirar Dinero";
-       cout << "\n0. Salir";
-       cout << "\n===================================";
-       cout << "\nSeleccion: ";
-       cin >> opcion;
-       if (opcion == 1) {
-           MensajeRed msg;
-           msg.tipo = OP_LOGIN;
-           cout << "Introduce Usuario y Contrasena (ej: usuario,clave): ";
-           cin.ignore();
-           cin.getline(msg.data, sizeof(msg.data));
-           send(sock, (char*)&msg, sizeof(msg), 0);
-           recv(sock, (char*)&msg, sizeof(msg), 0);
-           cout << "[Servidor]: " << msg.data << endl;
-       } else if (opcion == 2) {
-           // Aquí aplicas tu lógica de CACHÉ para no saturar al servidor
-           if (saldo_cache != -1.0) {
-               cout << "[Memoria Local] Saldo de la cuenta: " << saldo_cache << " EUR" << endl;
-           } else {
+
+   // --- VARIABLES DE CONTROL DE FLUJO ---
+   int opcion_acceso = -1;
+   bool sesion_iniciada = false;
+   float saldo_cache = -1.0;
+
+   // BUCLE MAESTRO DE LA APLICACIÓN
+   while (opcion_acceso != 0) {
+
+       //   FASE A: MENÚ DE ACCESO (ANTES DE INICIAR SESIÓN)
+       if (!sesion_iniciada) {
+           cout << "\n===================================";
+           cout << "\n       BIENVENIDO AL BANCO         ";
+           cout << "\n===================================";
+           cout << "\n1. Iniciar Sesion (Login)";
+           cout << "\n2. Registrarse";
+           cout << "\n0. Salir";
+           cout << "\n===================================";
+           cout << "\nSeleccion: ";
+           cin >> opcion_acceso;
+
+           cin.ignore((numeric_limits<streamsize>::max)(), '\n');
+
+           if (opcion_acceso == 1) {
+               string usuario, contrasenya;
+
+               cout << "\nINICIO DE SESION";
+               cout << "\n----------------";
+               cout << "\nIntroduzca el usuario: ";
+               cin >> usuario;
+               cout << "Introduzca la contrasenya: ";
+               cin >> contrasenya;
+
                MensajeRed msg;
-               msg.tipo = OP_CONSULTAR_CUENTAS;
-               // Si necesitas pasar un ID de cuenta, lo pides aquí:
-               cout << "Introduce el ID de cuenta a consultar: ";
-               cin >> msg.data;
+               msg.tipo = OP_LOGIN;
+               snprintf(msg.data, sizeof(msg.data), "%s,%s", usuario.c_str(), contrasenya.c_str());
+
                send(sock, (char*)&msg, sizeof(msg), 0);
                recv(sock, (char*)&msg, sizeof(msg), 0);
-               // Guardamos el resultado en la caché (asumiendo que el servidor responde el número en texto)
-               saldo_cache = atof(msg.data);
-               cout << "[Servidor] Saldo actualizado: " << saldo_cache << " EUR" << endl;
+
+               // --- LÓGICA DE VALIDACIÓN DE LOGIN ---
+               string respuesta(msg.data);
+               // Si la respuesta del servidor contiene "Error", "incorrecto" o "no existe"
+               if (respuesta.find("Error") != string::npos || respuesta.find("no existe") != string::npos || respuesta.find("incorrecta") != string::npos) {
+                   cout << "\n[Servidor]: " << msg.data << endl;
+                   cout << "Acceso denegado. El usuario no existe o la clave esta mal." << endl;
+                   sesion_iniciada = false; // Bloqueado, se queda en este menú
+               } else {
+                   cout << "\n[Servidor]: " << msg.data << endl;
+                   cout << "Conexion con el servidor realizada con exito! Presione cualquier tecla para continuar";
+                   cin.ignore();
+                   cin.get();
+                   sesion_iniciada = true; // Desbloqueado, pasa al cajero
+               }
+           } else if (opcion_acceso == 2) {
+               string usuario, contrasenya;
+
+               cout << "\nREGISTRO DE NUEVA CUENTA";
+               cout << "\n------------------------";
+               cout << "\nIntroduzca el nuevo usuario: ";
+               cin >> usuario;
+               cout << "Introduzca la contrasenya: ";
+               cin >> contrasenya;
+
+               MensajeRed msg;
+               msg.tipo = OP_REGISTRO;
+               snprintf(msg.data, sizeof(msg.data), "%s,%s", usuario.c_str(), contrasenya.c_str());
+
+               send(sock, (char*)&msg, sizeof(msg), 0);
+               recv(sock, (char*)&msg, sizeof(msg), 0);
+
+               // --- LÓGICA DE VALIDACIÓN DE REGISTRO ---
+               string respuesta(msg.data);
+               if (respuesta.find("Error") != string::npos || respuesta.find("ya existe") != string::npos) {
+                   cout << "\n[Servidor]: " << msg.data << endl;
+                   cout << "No se pudo registrar el usuario." << endl;
+                   sesion_iniciada = false;
+               } else {
+                   cout << "\n[Servidor]: " << msg.data << endl;
+                   cout << "Registro completado con exito! Presione cualquier tecla para continuar";
+                   cin.ignore();
+                   cin.get();
+                   sesion_iniciada = true;
+               }
+
+           } else if (opcion_acceso == 0) {
+               MensajeRed msg;
+               msg.tipo = OP_SALIR;
+               send(sock, (char*)&msg, sizeof(msg), 0);
+               cout << "Cerrando conexion con el banco. ¡Hasta pronto!" << endl;
            }
-       } else if (opcion == 3) {
-           MensajeRed msg;
-           msg.tipo = OP_TRANSFERENCIA;
-           cout << "Introduce los datos (ej: CuentaOrigen,CuentaDestino,Cantidad): ";
-           cin.ignore();
-           cin.getline(msg.data, sizeof(msg.data));
-           send(sock, (char*)&msg, sizeof(msg), 0);
-           recv(sock, (char*)&msg, sizeof(msg), 0);
-           cout << "[Servidor]: " << msg.data << endl;
-           // ¡IMPORTANTE! Al hacer una transferencia el saldo cambia,
-           // así que invalidamos la caché para que la próxima consulta pida datos reales.
-           saldo_cache = -1.0;
-       } else if (opcion == 4) {
-           MensajeRed msg;
-           msg.tipo = OP_HISTORIAL;
-           cout << "Introduce el ID de cuenta para ver su historial: ";
-           cin >> msg.data;
-           send(sock, (char*)&msg, sizeof(msg), 0);
-           recv(sock, (char*)&msg, sizeof(msg), 0);
-           cout << "\n--- HISTORIAL DE TRANSACCIONES ---" << endl;
-           cout << msg.data << endl;
-       } else if (opcion == 5) {
-           MensajeRed msg;
-           msg.tipo = OP_DEPOSITAR;
-           char cuenta[50];
-           float cantidad;
-           cout << "Introduce el numero de cuenta: ";
-           cin >> cuenta;
-           cout << "Introduce la cantidad a depositar: ";
-           cin >> cantidad;
-           snprintf(msg.data, sizeof(msg.data), "%s,%.2f", cuenta, cantidad);
-           send(sock, (char*)&msg, sizeof(msg), 0);
-           recv(sock, (char*)&msg, sizeof(msg), 0);
-           cout << "[Servidor]: " << msg.data << endl;
-           saldo_cache = -1.0;
-       } else if (opcion == 6) {
-           MensajeRed msg;
-           msg.tipo = OP_RETIRAR;
-           char cuenta[50];
-           float cantidad;
-           cout << "Introduce el numero de cuenta: ";
-           cin >> cuenta;
-           cout << "Introduce la cantidad a retirar: ";
-           cin >> cantidad;
-           snprintf(msg.data, sizeof(msg.data), "%s,%.2f", cuenta, cantidad);
-           send(sock, (char*)&msg, sizeof(msg), 0);
-           recv(sock, (char*)&msg, sizeof(msg), 0);
-           cout << "[Servidor]: " << msg.data << endl;
-           // Invalidar caché porque el saldo cambió
-           saldo_cache = -1.0;
-       } else if (opcion == 0) {
-           MensajeRed msg;
-           msg.tipo = OP_SALIR;
-           send(sock, (char*)&msg, sizeof(msg), 0);
-           cout << "Cerrando conexion con el banco. ¡Hasta pronto!" << endl;
+       }
+
+       //   FASE B: MENÚ PRINCIPAL OPERATIVO (SESIÓN ACTIVA)
+       else {
+           int opcion_main = -1;
+           while (opcion_main != 0) {
+               cout << "\n===================================";
+               cout << "\n     SISTEMA BANCARIO - CAJERO     ";
+               cout << "\n===================================";
+               cout << "\n1. Consultar Cuentas / Saldo";
+               cout << "\n2. Realizar Transferencia";
+               cout << "\n3. Ver Historial de Transacciones";
+               cout << "\n4. Depositar Dinero";
+               cout << "\n5. Retirar Dinero";
+               cout << "\n0. Cerrar Sesion";
+               cout << "\n===================================";
+               cout << "\nSeleccion: ";
+               cin >> opcion_main;
+
+               if (opcion_main == 1) {
+                   if (saldo_cache != -1.0) {
+                       cout << "[Memoria Local] Saldo de la cuenta: " << saldo_cache << " EUR" << endl;
+                   } else {
+                       MensajeRed msg;
+                       msg.tipo = OP_CONSULTAR_CUENTAS;
+
+                       string entrada_cuenta;
+                       bool formato_valido = false;
+
+                       // Bucle hasta que el usuario meta el formato correcto
+                       while (!formato_valido) {
+                           cout << "\nCONSULTA DE SALDO";
+                           cout << "\n-----------------";
+                           cout << "\nIntroduce el ID de cuenta (Formato: SBN-XXXXXX): ";
+                           cin >> entrada_cuenta;
+
+                           // Validación básica: Debe medir 10 caracteres y empezar por "SBN-"
+                           if (entrada_cuenta.length() == 10 && entrada_cuenta.substr(0, 4) == "SBN-") {
+                               formato_valido = true;
+                           } else {
+                               cout << "[ERROR] Formato incorrecto. Recuerda usar 'SBN-' seguido de 6 digitos (Ej: SBN-001234).\n";
+                           }
+                       }
+
+                       // Copiamos la cadena validada a la estructura que viaja al servidor
+                       strncpy(msg.data, entrada_cuenta.c_str(), sizeof(msg.data) - 1);
+
+                       send(sock, (char*)&msg, sizeof(msg), 0);
+                       recv(sock, (char*)&msg, sizeof(msg), 0);
+
+                       // --- LÓGICA DE VALIDACIÓN DE CUENTA ---
+                       string respuesta(msg.data);
+                       if (respuesta.find("Error") != string::npos || respuesta.find("no existe") != string::npos) {
+                           // Si el servidor avisa que la cuenta no existe, mostramos el aviso y NO guardamos nada
+                           cout << "[Servidor]: " << msg.data << endl;
+                           saldo_cache = -1.0;
+                       } else {
+                           // Si devuelve un número limpio, actualizamos la caché con éxito
+                           saldo_cache = atof(msg.data);
+                           cout << "[Servidor] Saldo actualizado: " << saldo_cache << " EUR" << endl;
+                       }
+                   }
+               } else if (opcion_main == 2) {
+                   MensajeRed msg;
+                   msg.tipo = OP_TRANSFERENCIA;
+                   cout << "Introduce los datos (ej: CuentaOrigen,CuentaDestino,Cantidad): ";
+                   cin.ignore();
+                   cin.getline(msg.data, sizeof(msg.data));
+
+                   send(sock, (char*)&msg, sizeof(msg), 0);
+                   recv(sock, (char*)&msg, sizeof(msg), 0);
+                   cout << "[Servidor]: " << msg.data << endl;
+
+                   saldo_cache = -1.0;
+
+               } else if (opcion_main == 3) {
+                   MensajeRed msg;
+                   msg.tipo = OP_HISTORIAL;
+                   cout << "Introduce el ID de cuenta para ver su historial: ";
+                   cin >> msg.data;
+
+                   send(sock, (char*)&msg, sizeof(msg), 0);
+                   recv(sock, (char*)&msg, sizeof(msg), 0);
+                   cout << "\n--- HISTORIAL DE TRANSACCIONES ---" << endl;
+                   cout << msg.data << endl;
+
+               } else if (opcion_main == 4) {
+                   MensajeRed msg;
+                   msg.tipo = OP_DEPOSITAR;
+                   char cuenta[50];
+                   float cantidad;
+                   cout << "Introduce el numero de cuenta: ";
+                   cin >> cuenta;
+                   cout << "Introduce la cantidad a depositar: ";
+                   cin >> cantidad;
+
+                   snprintf(msg.data, sizeof(msg.data), "%s,%.2f", cuenta, cantidad);
+                   send(sock, (char*)&msg, sizeof(msg), 0);
+                   recv(sock, (char*)&msg, sizeof(msg), 0);
+                   cout << "[Servidor]: " << msg.data << endl;
+
+                   saldo_cache = -1.0;
+
+               } else if (opcion_main == 5) {
+                   MensajeRed msg;
+                   msg.tipo = OP_RETIRAR;
+                   char cuenta[50];
+                   float cantidad;
+                   cout << "Introduce el numero de cuenta: ";
+                   cin >> cuenta;
+                   cout << "Introduce la cantidad a retirar: ";
+                   cin >> cantidad;
+
+                   snprintf(msg.data, sizeof(msg.data), "%s,%.2f", cuenta, cantidad);
+                   send(sock, (char*)&msg, sizeof(msg), 0);
+                   recv(sock, (char*)&msg, sizeof(msg), 0);
+                   cout << "[Servidor]: " << msg.data << endl;
+
+                   saldo_cache = -1.0;
+
+               } else if (opcion_main == 0) {
+                   cout << "Cerrando sesion activa... Volviendo al menu de acceso." << endl;
+                   sesion_iniciada = false;
+                   opcion_main = 0;
+               }
+           }
        }
    }
-   // 5. Limpieza
+
+   // 5. Limpieza final de sockets
    closesocket(sock);
    WSACleanup();
    return 0;

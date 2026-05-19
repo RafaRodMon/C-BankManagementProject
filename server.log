@@ -34,3 +34,32 @@
 [Tue May 19 11:08:29 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
 [Tue May 19 11:09:41 2026] CONEXIÓN: Un cliente se ha conectado.
 [Tue May 19 11:10:02 2026] CONEXIÓN: Cliente pidió salir.
+[Tue May 19 11:16:40 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
+[Tue May 19 11:18:09 2026] CONEXIÓN: Un cliente se ha conectado.
+[Tue May 19 18:14:49 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
+[Tue May 19 18:15:57 2026] CONEXIÓN: Un cliente se ha conectado.
+[Tue May 19 18:16:11 2026] OPERACIÓN: Login.
+[Tue May 19 18:20:04 2026] CONEXIÓN: Cliente desconectado.
+[Tue May 19 18:20:06 2026] CONEXIÓN: Un cliente se ha conectado.
+[Tue May 19 18:24:17 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
+[Tue May 19 18:26:46 2026] CONEXIÓN: Un cliente se ha conectado.
+[Tue May 19 18:27:06 2026] OPERACIÓN: Login.
+[Tue May 19 18:33:10 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
+[Tue May 19 18:35:42 2026] CONEXIÓN: Un cliente se ha conectado.
+[Tue May 19 18:35:57 2026] OPERACIÓN: Login.
+[Tue May 19 18:37:36 2026] CONEXIÓN: Cliente desconectado.
+[Tue May 19 18:37:38 2026] CONEXIÓN: Un cliente se ha conectado.
+[Tue May 19 18:38:19 2026] OPERACIÓN: Login.
+[Tue May 19 18:53:46 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
+[Tue May 19 18:54:04 2026] CONEXIÓN: Un cliente se ha conectado.
+[Tue May 19 18:54:21 2026] OPERACIÓN: Intento de Login.
+[Tue May 19 19:03:20 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
+[Tue May 19 19:05:04 2026] CONEXIÓN: Un cliente se ha conectado.
+[Tue May 19 19:05:54 2026] OPERACIÓN: Intento de Login.
+[Tue May 19 19:06:25 2026] OPERACIÓN: Consulta de Saldo.
+[Tue May 19 19:06:43 2026] OPERACIÓN: Retiro.
+[Tue May 19 19:06:51 2026] OPERACIÓN: Consulta de Saldo.
+[Tue May 19 19:16:56 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
+[Tue May 19 19:18:56 2026] CONEXIÓN: Un cliente se ha conectado.
+[Tue May 19 19:19:12 2026] OPERACIÓN: Registro de usuario.
+[Tue May 19 19:19:36 2026] OPERACIÓN: Consulta de Saldo.
