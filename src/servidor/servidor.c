@@ -44,7 +44,7 @@ void manejar_cliente(int socket_cliente) {
         // Enviar respuesta (puedes reutilizar la misma struct)
         send(socket_cliente, &msg, sizeof(msg), 0);
     }
-    close(socket_cliente);
+    closesocket(socket_cliente);
 }
 
 int main() {
@@ -75,6 +75,8 @@ int main() {
     direccion.sin_addr.s_addr = INADDR_ANY;
     direccion.sin_port = htons(8080); // Asegúrate de que PORT esté definido
 
+    int opt = 1;
+    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, (char*)&opt, sizeof(opt));
     // 4. Bind
     if (bind(server_fd, (struct sockaddr *)&direccion, sizeof(direccion)) == SOCKET_ERROR) {
         printf("Error en bind: %d\n", WSAGetLastError());
@@ -88,30 +90,39 @@ int main() {
     registrar_log("SERVIDOR: Sistema iniciado y escuchando peticiones.");
 
     while(1) {
-        nuevo_socket = accept(server_fd, (struct sockaddr *)&direccion, &addrlen);
+        nuevo_socket = accept(server_fd, (struct sockaddr*)&direccion, &addrlen);
 
         if (nuevo_socket != INVALID_SOCKET) {
-            // 1. Log de conexión
             registrar_log("CONEXIÓN: Un cliente se ha conectado.");
 
-            // 2. Procesar la petición
             MensajeRed msg;
-            int bytes = recv(nuevo_socket, (char*)&msg, sizeof(msg), 0);
+            // Bucle para atender múltiples mensajes del mismo cliente
+            while (recv(nuevo_socket, (char*)&msg, sizeof(msg), 0) > 0) {
+                printf("Petición recibida: Tipo %d\n", msg.tipo);
 
-            if (bytes > 0) {
-                // Ejemplo: Si el cliente pide login
-                if (msg.tipo == OP_LOGIN) {
-                    // ... lógica de validación con SQLite ...
-                    registrar_log("OPERACIÓN: Intento de inicio de sesión.");
+                switch(msg.tipo) {
+                    case OP_LOGIN:
+                        registrar_log("OPERACIÓN: Login.");
+                        snprintf(msg.data, sizeof(msg.data), "Login OK");
+                        break;
+                    case OP_TRANSFERENCIA:
+                        registrar_log("OPERACIÓN: Transferencia.");
+                        snprintf(msg.data, sizeof(msg.data), "Transferencia OK");
+                        break;
+                    case OP_SALIR:
+                        registrar_log("CONEXIÓN: Cliente pidió salir.");
+                        closesocket(nuevo_socket);
+                        goto siguiente_cliente;
+                    default:
+                        snprintf(msg.data, sizeof(msg.data), "Operación no reconocida");
+                        break;
                 }
-                // Ejemplo: Si el cliente pide transferencia
-                else if (msg.tipo == OP_TRANSFERENCIA) {
-                    registrar_log("OPERACIÓN: Transferencia bancaria procesada.");
-                }
+                send(nuevo_socket, (char*)&msg, sizeof(msg), 0);
             }
 
             registrar_log("CONEXIÓN: Cliente desconectado.");
             closesocket(nuevo_socket);
+            siguiente_cliente:;
         }
     }
     return 0;

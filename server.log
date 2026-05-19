@@ -20,3 +20,17 @@
 [Sun May 17 15:35:09 2026] CONEXIÓN: Cliente desconectado.
 [Sun May 17 15:35:15 2026] CONEXIÓN: Un cliente se ha conectado.
 [Sun May 17 15:39:53 2026] CONEXIÓN: Cliente desconectado.
+[Tue May 19 10:07:09 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
+[Tue May 19 10:23:25 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
+[Tue May 19 10:26:06 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
+[Tue May 19 10:26:33 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
+[Tue May 19 10:30:50 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
+[Tue May 19 10:40:25 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
+[Tue May 19 10:40:40 2026] CONEXIÓN: Un cliente se ha conectado.
+[Tue May 19 10:42:00 2026] OPERACIÓN: Login.
+[Tue May 19 10:42:27 2026] OPERACIÓN: Login.
+[Tue May 19 10:42:48 2026] CONEXIÓN: Cliente pidió salir.
+[Tue May 19 10:53:42 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
+[Tue May 19 11:08:29 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
+[Tue May 19 11:09:41 2026] CONEXIÓN: Un cliente se ha conectado.
+[Tue May 19 11:10:02 2026] CONEXIÓN: Cliente pidió salir.
