@@ -20,6 +20,8 @@
 #include "../servicios/acciones.h"
 #include "../modelos/cuentas.h"
 
+#define s_addr  S_un.S_addr
+
 sqlite3 *db = NULL;
 
 void manejar_cliente(int socket_cliente) {
@@ -36,7 +38,7 @@ int main() {
     int addrlen = sizeof(direccion);
     Config cfg;
 
-    if (cargarConfig("data/config.txt", &cfg) != 0) {
+    if (cargarConfig("src/config/config.txt", &cfg) != 0) {
         printf("Error al cargar config.txt. Usando valores por defecto.\n");
         strcpy(cfg.db_ruta, "data/banco.db");
         strcpy(cfg.log_ruta, "data/server.log");
