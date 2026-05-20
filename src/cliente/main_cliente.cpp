@@ -9,6 +9,22 @@
 #pragma comment(lib, "ws2_32.lib")
 using namespace std;
 
+typedef struct {
+    int id;
+    string nombre;
+    bool cargado = false;
+}DatosUsuario;
+
+typedef struct {
+    string nombreCuenta;
+    string datos;
+    bool cargado = false;
+}HistorialCache;
+
+DatosUsuario usuario_cache;
+HistorialCache historial_cache;
+
+
 int main() {
    // 1. Inicializar Winsock
    WSADATA wsaData;
@@ -92,6 +108,8 @@ int main() {
                    cin.ignore();
                    cin.get();
                    sesion_iniciada = true; // Desbloqueado, pasa al cajero
+                   usuario_cache.nombre = respuesta; // ya tienes el nombre en msg.data
+                   usuario_cache.cargado = true;
                }
            } else if (opcion_acceso == 2) {
                string usuario, contrasenya, apellido, dni;
@@ -208,18 +226,33 @@ int main() {
                    cout << "[Servidor]: " << msg.data << endl;
 
                    saldo_cache = -1.0;
+                   historial_cache.cargado = false;
 
                } else if (opcion_main == 3) {
-                   MensajeRed msg;
-                   msg.tipo = OP_HISTORIAL;
-                   cout << "Introduce el ID de cuenta para ver su historial: ";
-                   cin >> msg.data;
+                   string cuenta_historial;
+                   cout << "Introduce el ID de cuenta: ";
+                   cin >> cuenta_historial;
 
-                   send(sock, (char*)&msg, sizeof(msg), 0);
-                   recv(sock, (char*)&msg, sizeof(msg), 0);
-                   cout << "\n--- HISTORIAL DE TRANSACCIONES ---" << endl;
-                   cout << msg.data << endl;
+                   // Comprobar caché primero
+                   if (historial_cache.cargado && historial_cache.nombreCuenta == cuenta_historial) {
+                       cout << "\n--- HISTORIAL (desde memoria local) ---" << endl;
+                       cout << historial_cache.datos << endl;
+                   } else {
+                       MensajeRed msg;
+                       msg.tipo = OP_HISTORIAL;
+                       strncpy(msg.data, cuenta_historial.c_str(), sizeof(msg.data) - 1);
 
+                       send(sock, (char*)&msg, sizeof(msg), 0);
+                       recv(sock, (char*)&msg, sizeof(msg), 0);
+
+                       cout << "\n--- HISTORIAL DE TRANSACCIONES ---" << endl;
+                       cout << msg.data << endl;
+
+                       // Guardar en caché
+                       historial_cache.nombreCuenta = cuenta_historial;
+                       historial_cache.datos = msg.data;
+                       historial_cache.cargado = true;
+                   }
                } else if (opcion_main == 4) {
                    MensajeRed msg;
                    msg.tipo = OP_DEPOSITAR;
@@ -236,6 +269,7 @@ int main() {
                    cout << "[Servidor]: " << msg.data << endl;
 
                    saldo_cache = -1.0;
+                   historial_cache.cargado = false;
 
                } else if (opcion_main == 5) {
                    MensajeRed msg;
@@ -253,6 +287,7 @@ int main() {
                    cout << "[Servidor]: " << msg.data << endl;
 
                    saldo_cache = -1.0;
+                   historial_cache.cargado = false;
 
                } else if (opcion_main == 0) {
                    cout << "Cerrando sesion activa... Volviendo al menu de acceso." << endl;
