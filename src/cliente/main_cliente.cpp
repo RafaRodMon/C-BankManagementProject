@@ -6,7 +6,9 @@
 #include <vector>
 #include <limits>
 #include "../protocolo.h"
-#pragma comment(lib, "ws2_32.lib")
+#ifdef _MSC_VER
+  #pragma comment(lib, "ws2_32.lib")
+#endif
 using namespace std;
 
 typedef struct {

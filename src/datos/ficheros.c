@@ -6,6 +6,7 @@
  */
 #include <stdio.h>
 #include <stddef.h>
+#include <string.h>
 #include <time.h>
 #include "sqlite3.h"
 #include "ficheros.h"

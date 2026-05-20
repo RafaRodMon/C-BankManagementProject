@@ -12,12 +12,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#pragma comment(lib, "ws2_32.lib")
+#ifdef _MSC_VER
+  #pragma comment(lib, "ws2_32.lib")
+#endif
 
 #include "../protocolo.h"
 #include "../datos/ficheros.h"
 #include "../datos/sqlite3.h"
-#include "../servicios/acciones.h"
 #include "../modelos/cuentas.h"
 
 #define s_addr  S_un.S_addr
