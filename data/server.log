@@ -12,3 +12,18 @@
 [Wed May 20 16:06:26 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
 [Wed May 20 16:07:19 2026] CONEXIÓN: Un cliente se ha conectado.
 [Wed May 20 16:07:29 2026] CONEXIÓN: Cliente desconectado.
+[Wed May 20 15:17:42 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
+[Wed May 20 15:19:19 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
+[Wed May 20 15:20:10 2026] CONEXIÓN: Un cliente se ha conectado.
+[Wed May 20 15:20:28 2026] OPERACIÓN: Intento de Login.
+[Wed May 20 15:20:28 2026] LOGIN: Acceso denegado.
+[Wed May 20 15:20:37 2026] OPERACIÓN: Intento de Login.
+[Wed May 20 15:20:37 2026] LOGIN: Acceso correcto.
+[Wed May 20 15:20:59 2026] OPERACION: Consulta de Saldo.
+[Wed May 20 15:21:26 2026] OPERACIÓN: Transferencia.
+[Wed May 20 15:21:41 2026] OPERACIÓN: Historial.
+[Wed May 20 15:21:58 2026] OPERACIÓN: Depósito.
+[Wed May 20 15:21:58 2026] DEPOSITO realizado con exito.
+[Wed May 20 15:22:11 2026] OPERACION: Consulta de Saldo.
+[Wed May 20 15:22:26 2026] OPERACIÓN: Historial.
+[Wed May 20 15:22:52 2026] CONEXIÓN: Cliente pidió salir.

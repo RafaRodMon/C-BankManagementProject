@@ -1,27 +1,35 @@
-/*
- * cliente.cpp
- *
- *  Created on: 14 may 2026
- *      Author: i.tejedor
- */
-
 #include <iostream>
 #include <string>
+#include <stdexcept>
 #include <winsock2.h>
-#include "../protocolo.h" // El archivo que definimos antes
+#include "../protocolo.h"
 
 using namespace std;
+
+class ErrorConexion : public runtime_error {
+public:
+    ErrorConexion(const string& msg) : runtime_error(msg) {}
+};
 
 class BancoCliente {
 private:
     SOCKET sock;
     struct sockaddr_in serv_addr;
+    bool conectado = false;
 
 public:
     BancoCliente() {
         WSADATA wsa;
         WSAStartup(MAKEWORD(2, 2), &wsa);
+        sock = INVALID_SOCKET;
     }
+
+    ~BancoCliente() {
+        cerrar();
+    }
+
+    BancoCliente(const BancoCliente&) = delete;
+    BancoCliente& operator=(const BancoCliente&) = delete;
 
     bool conectar(string ip, int puerto) {
         sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -30,20 +38,30 @@ public:
         serv_addr.sin_addr.s_addr = inet_addr(ip.c_str());
 
         if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
-            cout << "Error de conexion" << endl;
-            return false;
+            throw ErrorConexion("Error de conexion con " + ip);
         }
+        conectado = true;
         return true;
     }
 
-    void enviarPeticion(MensajeRed& msg) {
-        send(sock, (char*)&msg, sizeof(msg), 0);
-        // Recibir respuesta
-        recv(sock, (char*)&msg, sizeof(msg), 0);
+    MensajeRed enviarPeticion(const MensajeRed& peticion) {
+        if (!conectado) throw ErrorConexion("No hay conexión activa");
+
+        MensajeRed respuesta = peticion;
+        send(sock, (char*)&respuesta, sizeof(respuesta), 0);
+        recv(sock, (char*)&respuesta, sizeof(respuesta), 0);
+        return respuesta;
+    }
+
+    bool estaConectado() const {
+        return conectado;
     }
 
     void cerrar() {
-        closesocket(sock);
-        WSACleanup();
+        if (conectado) {
+            closesocket(sock);
+            WSACleanup();
+            conectado = false;
+        }
     }
 };
