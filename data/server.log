@@ -27,3 +27,45 @@
 [Wed May 20 15:22:11 2026] OPERACION: Consulta de Saldo.
 [Wed May 20 15:22:26 2026] OPERACIÓN: Historial.
 [Wed May 20 15:22:52 2026] CONEXIÓN: Cliente pidió salir.
+[Wed May 20 16:03:22 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
+[Wed May 20 16:03:57 2026] CONEXIÓN: Un cliente se ha conectado.
+[Wed May 20 16:04:06 2026] OPERACIÓN: Intento de Login.
+[Wed May 20 16:04:06 2026] LOGIN: Acceso correcto.
+[Wed May 20 16:04:56 2026] OPERACIÓN: Transferencia.
+[Wed May 20 16:05:17 2026] OPERACION: Consulta de Saldo.
+[Wed May 20 16:05:39 2026] OPERACIÓN: Transferencia.
+[Wed May 20 16:05:39 2026] TRANSFERENCIA realizada con exito.
+[Wed May 20 16:05:52 2026] OPERACIÓN: Historial.
+[Wed May 20 16:06:05 2026] OPERACION: Consulta de Saldo.
+[Wed May 20 16:06:22 2026] OPERACIÓN: Intento de Login.
+[Wed May 20 16:06:22 2026] LOGIN: Acceso correcto.
+[Wed May 20 16:07:15 2026] OPERACIÓN: Transferencia.
+[Wed May 20 16:07:15 2026] TRANSFERENCIA realizada con exito.
+[Wed May 20 16:07:29 2026] OPERACION: Consulta de Saldo.
+[Wed May 20 16:07:45 2026] OPERACIÓN: Intento de Login.
+[Wed May 20 16:07:45 2026] LOGIN: Acceso correcto.
+[Wed May 20 16:10:52 2026] OPERACIÓN: Depósito.
+[Wed May 20 16:10:52 2026] DEPOSITO realizado con exito.
+[Wed May 20 16:11:03 2026] OPERACION: Consulta de Saldo.
+[Wed May 20 16:11:20 2026] OPERACIÓN: Intento de Login.
+[Wed May 20 16:11:20 2026] LOGIN: Acceso correcto.
+[Wed May 20 16:11:43 2026] OPERACIÓN: Depósito.
+[Wed May 20 16:11:43 2026] DEPOSITO realizado con exito.
+[Wed May 20 16:11:56 2026] OPERACION: Consulta de Saldo.
+[Wed May 20 16:18:22 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
+[Wed May 20 16:19:01 2026] CONEXIÓN: Un cliente se ha conectado.
+[Wed May 20 16:19:09 2026] OPERACIÓN: Intento de Login.
+[Wed May 20 16:19:09 2026] LOGIN: Acceso correcto.
+[Wed May 20 16:19:17 2026] OPERACION: Consulta de Saldo.
+[Wed May 20 16:19:46 2026] OPERACIÓN: Intento de Login.
+[Wed May 20 16:19:46 2026] LOGIN: Acceso correcto.
+[Wed May 20 16:19:57 2026] OPERACION: Consulta de Saldo.
+[Wed May 20 16:20:04 2026] OPERACIÓN: Intento de Login.
+[Wed May 20 16:20:04 2026] LOGIN: Acceso correcto.
+[Wed May 20 16:20:16 2026] OPERACION: Consulta de Saldo.
+[Wed May 20 16:20:34 2026] OPERACIÓN: Transferencia.
+[Wed May 20 16:20:34 2026] TRANSFERENCIA realizada con exito.
+[Wed May 20 16:20:44 2026] OPERACIÓN: Intento de Login.
+[Wed May 20 16:20:44 2026] LOGIN: Acceso correcto.
+[Wed May 20 16:20:56 2026] OPERACION: Consulta de Saldo.
+[Wed May 20 16:21:00 2026] CONEXIÓN: Cliente pidió salir.

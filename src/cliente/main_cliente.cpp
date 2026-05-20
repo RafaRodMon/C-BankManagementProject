@@ -217,17 +217,27 @@ int main() {
                } else if (opcion_main == 2) {
                    MensajeRed msg;
                    msg.tipo = OP_TRANSFERENCIA;
-                   cout << "Introduce los datos (ej: CuentaOrigen,CuentaDestino,Cantidad): ";
-                   cin.ignore();
-                   cin.getline(msg.data, sizeof(msg.data));
 
+                   char cuenta_origen[50];
+                   char cuenta_destino[50];
+                   float cantidad;
+
+                   cout << "\nREALIZAR TRANSFERENCIA";
+                   cout << "\n----------------------";
+                   cout << "\nIntroduce el numero de cuenta origen: ";
+                   cin >> cuenta_origen;
+                   cout << "Introduce el numero de cuenta destino: ";
+                   cin >> cuenta_destino;
+                   cout << "Introduce la cantidad a transferir: ";
+                   cin >> cantidad;
+
+                   snprintf(msg.data, sizeof(msg.data), "%s,%s,%.2f", cuenta_origen, cuenta_destino, cantidad);
                    send(sock, (char*)&msg, sizeof(msg), 0);
                    recv(sock, (char*)&msg, sizeof(msg), 0);
                    cout << "[Servidor]: " << msg.data << endl;
 
                    saldo_cache = -1.0;
                    historial_cache.cargado = false;
-
                } else if (opcion_main == 3) {
                    string cuenta_historial;
                    cout << "Introduce el ID de cuenta: ";
@@ -293,6 +303,14 @@ int main() {
                    cout << "Cerrando sesion activa... Volviendo al menu de acceso." << endl;
                    sesion_iniciada = false;
                    opcion_main = 0;
+
+                   // Limpiar toda la caché al cerrar sesión
+                   saldo_cache = -1.0;
+                   historial_cache.cargado = false;
+                   historial_cache.nombreCuenta = "";
+                   historial_cache.datos = "";
+                   usuario_cache.cargado = false;
+                   usuario_cache.nombre = "";
                }
            }
        }
