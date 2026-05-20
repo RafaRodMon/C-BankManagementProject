@@ -112,12 +112,12 @@ int main() {
                         registrar_log("OPERACIÓN: Registro de nuevo usuario y cuenta.");
 
                         // 1. Extraemos los datos que envió el cliente ("usuario,contrasenya")
-                        sscanf(msg.data, "%[^,],%s", usuario, contrasenya);
+                        sscanf(msg.data, "%49[^,],%49s", usuario, contrasenya);
 
                         // 2. Aquí debes insertar el usuario en tu tabla de Usuarios de SQLite.
                         char sql_user[400];
                         snprintf(sql_user, sizeof(sql_user),
-                                 "INSERT INTO Usuario (nombre, password) VALUES ('%s', '%s');",
+                                 "INSERT INTO Cliente (nombre, contrasenya) VALUES ('%s', '%s');",
                                  usuario, contrasenya);
 
                         int rc = sqlite3_exec(db, sql_user, NULL, NULL, NULL);
@@ -142,21 +142,25 @@ int main() {
                         break;
 
                     case OP_CONSULTAR_CUENTAS:
-                        registrar_log("OPERACIÓN: Consulta de Saldo.");
-                        // El cliente envía el ID de la cuenta directamente en msg.data
-                        strncpy(cuenta, msg.data, sizeof(cuenta) - 1);
+                        registrar_log("OPERACION: Consulta de Saldo.");
+                        {
+                            char sql[300];
+                            snprintf(sql, sizeof(sql),
+                                "SELECT saldo FROM Cuenta WHERE nombreCuenta = '%s';",
+                                msg.data);
 
-                        /*
-                         * TODO: Consultar saldo real en SQLite.
-                         * float saldo = obtener_saldo_db(cuenta);
-                         */
-                        // --- PRUEBA TEMPORAL DE LÓGICA ---
-                        if (strcmp(cuenta, "ES1234") == 0) {
-                            // Si existe, devolvemos SOLO el número en texto para que atof() lo lea en el cliente
-                            snprintf(msg.data, sizeof(msg.data), "2550.75");
-                        } else {
-                            // Si no existe, mandamos la palabra "Error" que el cliente interceptará
-                            snprintf(msg.data, sizeof(msg.data), "Error: La cuenta bancaria %s no existe.", cuenta);
+                            sqlite3_stmt *stmt;
+                            if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
+                                if (sqlite3_step(stmt) == SQLITE_ROW) {
+                                    snprintf(msg.data, sizeof(msg.data), "%.2f",
+                                        sqlite3_column_double(stmt, 0));
+                                } else {
+                                    snprintf(msg.data, sizeof(msg.data), "Error: Cuenta no encontrada.");
+                                }
+                                sqlite3_finalize(stmt);
+                            } else {
+                                snprintf(msg.data, sizeof(msg.data), "Error interno de la BD.");
+                            }
                         }
                         break;
 

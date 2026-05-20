@@ -12,7 +12,6 @@
 #include "../modelos/cuentas.h"
 #include "../datos/sqlite3.h"
 
-extern sqlite3 *db;
 
 void mostrarMercado(sqlite3 *db) {
     sqlite3_stmt *stmt;
@@ -290,39 +289,4 @@ void venderAccion(sqlite3 *db, int id_cliente) {
 }
 
 
-void procesar_peticion(SOCKET socket_cliente) {
-    MensajeRed msg_recibido;
-    MensajeRed msg_respuesta;
 
-    // Recibimos la estructura del cliente
-    int bytes = recv(socket_cliente, (char*)&msg_recibido, sizeof(msg_recibido), 0);
-
-    if (bytes > 0) {
-    	if (msg_recibido.tipo == OP_CONSULTAR_CUENTAS) {
-    	    msg_respuesta.tipo = OP_CONSULTAR_CUENTAS;
-
-    	    // Declaramos un string para guardar el query SQL
-    	    char sql[300];
-    	    // Buscamos directamente por el nombre de cuenta que el cliente guardó en msg_recibido.data
-    	    snprintf(sql, sizeof(sql), "SELECT saldo FROM Cuenta WHERE nombreCuenta = '%s';", msg_recibido.data);
-
-    	    sqlite3_stmt *stmt;
-    	    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
-    	        if (sqlite3_step(stmt) == SQLITE_ROW) {
-    	            // Si encontramos la cuenta, guardamos el saldo en la respuesta
-    	            snprintf(msg_respuesta.data, sizeof(msg_respuesta.data), "%.2f", sqlite3_column_double(stmt, 0));
-    	        } else {
-    	            snprintf(msg_respuesta.data, sizeof(msg_respuesta.data), "Error: Cuenta no encontrada.");
-    	        }
-    	        sqlite3_finalize(stmt);
-    	    } else {
-    	        snprintf(msg_respuesta.data, sizeof(msg_respuesta.data), "Error interno de la BD.");
-    	    }
-
-    	    // Enviamos el mensaje de vuelta por el socket
-    	    send(socket_cliente, (char*)&msg_respuesta, sizeof(msg_respuesta), 0);
-
-    	    registrar_log("Consulta de saldo realizada");
-    	}
-    }
-}
