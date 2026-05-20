@@ -92,52 +92,71 @@ int main() {
 
                 switch(msg.tipo) {
 
-                    case OP_LOGIN:
-                        registrar_log("OPERACIÓN: Intento de Login.");
-                        // Separamos el "usuario,contrasenya" enviado por el cliente
-                        sscanf(msg.data, "%[^,],%s", usuario, contrasenya);
+                case OP_LOGIN:
+                    registrar_log("OPERACIÓN: Intento de Login.");
+                    {
+                        sscanf(msg.data, "%49[^,],%49s", usuario, contrasenya);
 
-                        /* * TODO: Aquí debes conectar tu consulta SQLite/Fichero.
-                         * Ejemplo: if (verificar_usuario_db(usuario, contrasenya)) ...
-                         */
-                        // --- PRUEBA TEMPORAL DE LÓGICA ---
-                        if (strcmp(usuario, "admin") == 0 && strcmp(contrasenya, "1234") == 0) {
-                            snprintf(msg.data, sizeof(msg.data), "Login OK. Bienvenido %s.", usuario);
+                        char sql_login[300];
+                        snprintf(sql_login, sizeof(sql_login),
+                            "SELECT id_cliente, nombre FROM Cliente "
+                            "WHERE nombre = '%s' AND contrasenya = '%s';",
+                            usuario, contrasenya);
+
+                        sqlite3_stmt *stmt;
+                        int encontrado = 0;
+                        char nombre_cliente[50] = {0};
+
+                        if (sqlite3_prepare_v2(db, sql_login, -1, &stmt, NULL) == SQLITE_OK) {
+                            if (sqlite3_step(stmt) == SQLITE_ROW) {
+                                encontrado = 1;
+                                strncpy(nombre_cliente,
+                                    (const char*)sqlite3_column_text(stmt, 1),
+                                    sizeof(nombre_cliente) - 1);
+                            }
+                            sqlite3_finalize(stmt);
+                        }
+
+                        if (encontrado) {
+                            snprintf(msg.data, sizeof(msg.data), "Login OK. Bienvenido %s.", nombre_cliente);
+                            registrar_log("LOGIN: Acceso correcto.");
                         } else {
                             snprintf(msg.data, sizeof(msg.data), "Error: El usuario no existe o la clave es incorrecta.");
+                            registrar_log("LOGIN: Acceso denegado.");
                         }
-                        break;
+                    }
+                    break;
 
                     case OP_REGISTRO:
                         registrar_log("OPERACIÓN: Registro de nuevo usuario y cuenta.");
 
-                        // 1. Extraemos los datos que envió el cliente ("usuario,contrasenya")
-                        sscanf(msg.data, "%49[^,],%49s", usuario, contrasenya);
+                        // 1. Extraemos los datos enviados por el cliente ("nombre,apellido,dni,contrasenya")
+                        char apellido[50] = {0};
+                        char dni[20] = {0};
+                        sscanf(msg.data, "%49[^,],%49[^,],%19[^,],%49s", usuario, apellido, dni, contrasenya);
 
-                        // 2. Aquí debes insertar el usuario en tu tabla de Usuarios de SQLite.
+                        // 2. Insertar el cliente completo en la BD
                         char sql_user[400];
                         snprintf(sql_user, sizeof(sql_user),
-                                 "INSERT INTO Cliente (nombre, contrasenya) VALUES ('%s', '%s');",
-                                 usuario, contrasenya);
+                                 "INSERT INTO Cliente (nombre, apellido, dni, contrasenya) VALUES ('%s', '%s', '%s', '%s');",
+                                 usuario, apellido, dni, contrasenya);
 
                         int rc = sqlite3_exec(db, sql_user, NULL, NULL, NULL);
 
                         if (rc == SQLITE_OK) {
-                            // 3. ¡MUY IMPORTANTE! Recuperamos el ID que SQLite le acaba de asignar al usuario
+                            // 3. Recuperamos el ID generado automáticamente
                             int id_cliente_generado = (int)sqlite3_last_insert_rowid(db);
 
-                            // 4. Llamamos a tu función para crearle la cuenta bancaria automáticamente usando ese ID
-                            // Esta función escribirá el resultado ("Usuario registrado. Cuenta asignada: SBN-XXXXXX...") en msg.data
+                            // 4. Creamos la cuenta bancaria automáticamente para ese cliente
                             crearCuentaAutomatica(db, id_cliente_generado, msg.data);
 
                             registrar_log("REGISTRO: Usuario y cuenta creados con éxito.");
                         } else {
-                            // Si el nombre de usuario ya existía o hubo un error de BD
                             snprintf(msg.data, sizeof(msg.data), "Error: El nombre de usuario '%s' ya está en uso.", usuario);
                             registrar_log("REGISTRO: Fallo al insertar usuario.");
                         }
 
-                        // 5. El servidor envía la estructura 'msg' de vuelta (llevará el mensaje de éxito o de error)
+                        // 5. Enviar respuesta al cliente
                         send(nuevo_socket, (char*)&msg, sizeof(msg), 0);
                         break;
 
@@ -166,38 +185,208 @@ int main() {
 
                     case OP_TRANSFERENCIA:
                         registrar_log("OPERACIÓN: Transferencia.");
-                        // TODO: Implementar validación de cuenta origen/destino y saldo suficiente
-                        snprintf(msg.data, sizeof(msg.data), "Transferencia realizada con exito.");
+                        {
+                            char cuenta_origen[50] = {0};
+                            char cuenta_destino[50] = {0};
+                            float cantidad_transferir = 0.0;
+                            sscanf(msg.data, "%49[^,],%49[^,],%f", cuenta_origen, cuenta_destino, &cantidad_transferir);
+
+                            if (cantidad_transferir <= 0) {
+                                snprintf(msg.data, sizeof(msg.data), "Error: Cantidad invalida.");
+                                break;
+                            }
+
+                            /* Verificar saldo suficiente en cuenta origen */
+                            char sql_check[300];
+                            snprintf(sql_check, sizeof(sql_check),
+                                "SELECT saldo FROM Cuenta WHERE nombreCuenta = '%s';", cuenta_origen);
+
+                            sqlite3_stmt *stmt;
+                            float saldo_origen = -1.0;
+                            if (sqlite3_prepare_v2(db, sql_check, -1, &stmt, NULL) == SQLITE_OK) {
+                                if (sqlite3_step(stmt) == SQLITE_ROW)
+                                    saldo_origen = (float)sqlite3_column_double(stmt, 0);
+                                sqlite3_finalize(stmt);
+                            }
+
+                            if (saldo_origen < 0) {
+                                snprintf(msg.data, sizeof(msg.data), "Error: Cuenta origen no encontrada.");
+                                break;
+                            }
+                            if (saldo_origen < cantidad_transferir) {
+                                snprintf(msg.data, sizeof(msg.data), "Error: Saldo insuficiente. Saldo actual: %.2f EUR.", saldo_origen);
+                                break;
+                            }
+
+                            /* Verificar que cuenta destino existe */
+                            char sql_check2[300];
+                            snprintf(sql_check2, sizeof(sql_check2),
+                                "SELECT id_cuenta FROM Cuenta WHERE nombreCuenta = '%s';", cuenta_destino);
+                            int destino_existe = 0;
+                            if (sqlite3_prepare_v2(db, sql_check2, -1, &stmt, NULL) == SQLITE_OK) {
+                                if (sqlite3_step(stmt) == SQLITE_ROW) destino_existe = 1;
+                                sqlite3_finalize(stmt);
+                            }
+
+                            if (!destino_existe) {
+                                snprintf(msg.data, sizeof(msg.data), "Error: Cuenta destino no encontrada.");
+                                break;
+                            }
+
+                            /* Transferencia atomica */
+                            sqlite3_exec(db, "BEGIN;", NULL, NULL, NULL);
+
+                            char sql_resta[300], sql_suma[300];
+                            snprintf(sql_resta, sizeof(sql_resta),
+                                "UPDATE Cuenta SET saldo = saldo - %.2f WHERE nombreCuenta = '%s';",
+                                cantidad_transferir, cuenta_origen);
+                            snprintf(sql_suma, sizeof(sql_suma),
+                                "UPDATE Cuenta SET saldo = saldo + %.2f WHERE nombreCuenta = '%s';",
+                                cantidad_transferir, cuenta_destino);
+
+                            int ok = sqlite3_exec(db, sql_resta, NULL, NULL, NULL) == SQLITE_OK &&
+                                     sqlite3_exec(db, sql_suma,  NULL, NULL, NULL) == SQLITE_OK;
+
+                            if (ok) {
+                                sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL);
+                                registrarMovimiento(db, cuenta_origen,  "TRANSFERENCIA", cantidad_transferir, cuenta_origen, cuenta_destino);
+                                registrarMovimiento(db, cuenta_destino, "TRANSFERENCIA", cantidad_transferir, cuenta_origen, cuenta_destino);
+                                snprintf(msg.data, sizeof(msg.data), "Transferencia de %.2f EUR de %s a %s realizada con exito.",
+                                         cantidad_transferir, cuenta_origen, cuenta_destino);
+                                registrar_log("TRANSFERENCIA realizada con exito.");
+                            } else {
+                                sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
+                                snprintf(msg.data, sizeof(msg.data), "Error: Fallo al realizar la transferencia.");
+                            }
+                        }
                         break;
 
                     case OP_DEPOSITAR:
                         registrar_log("OPERACIÓN: Depósito.");
-                        sscanf(msg.data, "%[^,],%f", cuenta, &cantidad);
+                        {
+                            sscanf(msg.data, "%49[^,],%f", cuenta, &cantidad);
 
-                        // TODO: Modificar saldo en BD
-                        if (strcmp(cuenta, "ES1234") == 0) {
-                            snprintf(msg.data, sizeof(msg.data), "Deposito de %.2f EUR completado.", cantidad);
-                        } else {
-                            snprintf(msg.data, sizeof(msg.data), "Error: La cuenta %s no existe.", cuenta);
+                            if (cantidad <= 0) {
+                                snprintf(msg.data, sizeof(msg.data), "Error: Cantidad invalida.");
+                                break;
+                            }
+
+                            /* Verificar que la cuenta existe */
+                            char sql_check[300];
+                            snprintf(sql_check, sizeof(sql_check),
+                                "SELECT id_cuenta FROM Cuenta WHERE nombreCuenta = '%s';", cuenta);
+
+                            sqlite3_stmt *stmt;
+                            int existe = 0;
+                            if (sqlite3_prepare_v2(db, sql_check, -1, &stmt, NULL) == SQLITE_OK) {
+                                if (sqlite3_step(stmt) == SQLITE_ROW) existe = 1;
+                                sqlite3_finalize(stmt);
+                            }
+
+                            if (!existe) {
+                                snprintf(msg.data, sizeof(msg.data), "Error: La cuenta %s no existe.", cuenta);
+                                break;
+                            }
+
+                            /* Actualizar saldo */
+                            char sql_update[300];
+                            snprintf(sql_update, sizeof(sql_update),
+                                "UPDATE Cuenta SET saldo = saldo + %.2f WHERE nombreCuenta = '%s';",
+                                cantidad, cuenta);
+
+                            if (sqlite3_exec(db, sql_update, NULL, NULL, NULL) == SQLITE_OK) {
+                                registrarMovimiento(db, cuenta, "DEPOSITO", cantidad, "EXTERNO", cuenta);
+                                snprintf(msg.data, sizeof(msg.data), "Deposito de %.2f EUR en %s completado.", cantidad, cuenta);
+                                registrar_log("DEPOSITO realizado con exito.");
+                            } else {
+                                snprintf(msg.data, sizeof(msg.data), "Error: Fallo al realizar el deposito.");
+                            }
                         }
                         break;
 
                     case OP_RETIRAR:
                         registrar_log("OPERACIÓN: Retiro.");
-                        sscanf(msg.data, "%[^,],%f", cuenta, &cantidad);
+                        {
+                            sscanf(msg.data, "%49[^,],%f", cuenta, &cantidad);
 
-                        // TODO: Modificar saldo en BD controlando que no se quede en negativo
-                        if (strcmp(cuenta, "ES1234") == 0) {
-                            snprintf(msg.data, sizeof(msg.data), "Retiro de %.2f EUR completado.", cantidad);
-                        } else {
-                            snprintf(msg.data, sizeof(msg.data), "Error: La cuenta %s no existe.", cuenta);
+                            if (cantidad <= 0) {
+                                snprintf(msg.data, sizeof(msg.data), "Error: Cantidad invalida.");
+                                break;
+                            }
+
+                            /* Verificar que la cuenta existe y tiene saldo suficiente */
+                            char sql_check[300];
+                            snprintf(sql_check, sizeof(sql_check),
+                                "SELECT saldo FROM Cuenta WHERE nombreCuenta = '%s';", cuenta);
+
+                            sqlite3_stmt *stmt;
+                            float saldo_actual = -1.0;
+                            if (sqlite3_prepare_v2(db, sql_check, -1, &stmt, NULL) == SQLITE_OK) {
+                                if (sqlite3_step(stmt) == SQLITE_ROW)
+                                    saldo_actual = (float)sqlite3_column_double(stmt, 0);
+                                sqlite3_finalize(stmt);
+                            }
+
+                            if (saldo_actual < 0) {
+                                snprintf(msg.data, sizeof(msg.data), "Error: La cuenta %s no existe.", cuenta);
+                                break;
+                            }
+                            if (saldo_actual < cantidad) {
+                                snprintf(msg.data, sizeof(msg.data), "Error: Saldo insuficiente. Saldo actual: %.2f EUR.", saldo_actual);
+                                break;
+                            }
+
+                            /* Actualizar saldo */
+                            char sql_update[300];
+                            snprintf(sql_update, sizeof(sql_update),
+                                "UPDATE Cuenta SET saldo = saldo - %.2f WHERE nombreCuenta = '%s';",
+                                cantidad, cuenta);
+
+                            if (sqlite3_exec(db, sql_update, NULL, NULL, NULL) == SQLITE_OK) {
+                                registrarMovimiento(db, cuenta, "RETIRADA", cantidad, cuenta, "EXTERNO");
+                                snprintf(msg.data, sizeof(msg.data), "Retiro de %.2f EUR de %s completado.", cantidad, cuenta);
+                                registrar_log("RETIRO realizado con exito.");
+                            } else {
+                                snprintf(msg.data, sizeof(msg.data), "Error: Fallo al realizar el retiro.");
+                            }
                         }
                         break;
 
                     case OP_HISTORIAL:
                         registrar_log("OPERACIÓN: Historial.");
-                        // Devuelve un string largo con los movimientos de la cuenta
-                        snprintf(msg.data, sizeof(msg.data), "14/05/2026 - Deposito: +100 EUR\n15/05/2026 - Transferencia: -50 EUR");
+                        {
+                            char sql[300];
+                            snprintf(sql, sizeof(sql),
+                                "SELECT tipo, importe, ordenante, beneficiaria, fecha "
+                                "FROM Movimiento WHERE nombreCuenta = '%s' "
+                                "ORDER BY fecha DESC LIMIT 20;",
+                                msg.data);
+
+                            sqlite3_stmt *stmt;
+                            char historial[256] = "";
+                            int primero = 1;
+
+                            if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) == SQLITE_OK) {
+                                while (sqlite3_step(stmt) == SQLITE_ROW) {
+                                    char linea[100];
+                                    snprintf(linea, sizeof(linea), "%s%s | %.2f EUR | %s -> %s | %s",
+                                        primero ? "" : "\n",
+                                        (const char*)sqlite3_column_text(stmt, 0),
+                                        sqlite3_column_double(stmt, 1),
+                                        (const char*)sqlite3_column_text(stmt, 2),
+                                        (const char*)sqlite3_column_text(stmt, 3),
+                                        (const char*)sqlite3_column_text(stmt, 4));
+                                    strncat(historial, linea, sizeof(historial) - strlen(historial) - 1);
+                                    primero = 0;
+                                }
+                                sqlite3_finalize(stmt);
+                            }
+
+                            if (primero)
+                                snprintf(msg.data, sizeof(msg.data), "No hay movimientos para esta cuenta.");
+                            else
+                                strncpy(msg.data, historial, sizeof(msg.data) - 1);
+                        }
                         break;
 
                     case OP_SALIR:

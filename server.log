@@ -110,3 +110,16 @@
 [Wed May 20 12:56:51 2026] CONEXIÓN: Un cliente se ha conectado.
 [Wed May 20 12:57:36 2026] OPERACIÓN: Registro de nuevo usuario y cuenta.
 [Wed May 20 12:57:36 2026] REGISTRO: Usuario y cuenta creados con éxito.
+[Wed May 20 13:02:56 2026] CONEXIÓN: Cliente desconectado.
+[Wed May 20 13:07:22 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
+[Wed May 20 13:08:08 2026] CONEXIÓN: Un cliente se ha conectado.
+[Wed May 20 13:09:10 2026] OPERACIÓN: Registro de nuevo usuario y cuenta.
+[Wed May 20 13:09:10 2026] REGISTRO: Usuario y cuenta creados con éxito.
+[Wed May 20 13:09:30 2026] OPERACION: Consulta de Saldo.
+[Wed May 20 13:11:19 2026] OPERACIÓN: Historial.
+[Wed May 20 13:15:52 2026] CONEXIÓN: Cliente desconectado.
+[Wed May 20 13:30:26 2026] SERVIDOR: Sistema iniciado y escuchando peticiones.
+[Wed May 20 13:31:34 2026] CONEXIÓN: Un cliente se ha conectado.
+[Wed May 20 13:32:33 2026] OPERACIÓN: Intento de Login.
+[Wed May 20 13:32:33 2026] LOGIN: Acceso correcto.
+[Wed May 20 13:33:26 2026] OPERACION: Consulta de Saldo.

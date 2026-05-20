@@ -94,23 +94,27 @@ int main() {
                    sesion_iniciada = true; // Desbloqueado, pasa al cajero
                }
            } else if (opcion_acceso == 2) {
-               string usuario, contrasenya;
+               string usuario, contrasenya, apellido, dni;
 
                cout << "\nREGISTRO DE NUEVA CUENTA";
                cout << "\n------------------------";
-               cout << "\nIntroduzca el nuevo usuario: ";
+               cout << "\nIntroduzca el nombre: ";
                cin >> usuario;
+               cout << "Introduzca el apellido: ";
+               cin >> apellido;
+               cout << "Introduzca el DNI: ";
+               cin >> dni;
                cout << "Introduzca la contrasenya: ";
                cin >> contrasenya;
 
                MensajeRed msg;
                msg.tipo = OP_REGISTRO;
-               snprintf(msg.data, sizeof(msg.data), "%s,%s", usuario.c_str(), contrasenya.c_str());
+               snprintf(msg.data, sizeof(msg.data), "%s,%s,%s,%s",
+                        usuario.c_str(), apellido.c_str(), dni.c_str(), contrasenya.c_str());
 
                send(sock, (char*)&msg, sizeof(msg), 0);
                recv(sock, (char*)&msg, sizeof(msg), 0);
 
-               // --- LÓGICA DE VALIDACIÓN DE REGISTRO ---
                string respuesta(msg.data);
                if (respuesta.find("Error") != string::npos || respuesta.find("ya existe") != string::npos) {
                    cout << "\n[Servidor]: " << msg.data << endl;
