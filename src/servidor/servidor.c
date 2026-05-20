@@ -34,6 +34,14 @@ int main() {
     SOCKET server_fd, nuevo_socket;
     struct sockaddr_in direccion;
     int addrlen = sizeof(direccion);
+    Config cfg;
+
+    if (cargarConfig("data/config.txt", &cfg) != 0) {
+        printf("Error al cargar config.txt. Usando valores por defecto.\n");
+        strcpy(cfg.db_ruta, "data/banco.db");
+        strcpy(cfg.log_ruta, "data/server.log");
+        cfg.puerto = 8080;
+    }
 
     // 1. Inicializar Winsock (OBLIGATORIO en Windows)
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
@@ -52,7 +60,7 @@ int main() {
     // 3. Configurar dirección
     direccion.sin_family = AF_INET;
     direccion.sin_addr.s_addr = INADDR_ANY;
-    direccion.sin_port = htons(8080);
+    direccion.sin_port = htons(cfg.puerto);
 
     int opt = 1;
     setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, (char*)&opt, sizeof(opt));
@@ -65,19 +73,19 @@ int main() {
         return 1;
     }
 
-    if (sqlite3_open("data/banco.db", &db) != SQLITE_OK) {
+    if (sqlite3_open(cfg.db_ruta, &db) != SQLITE_OK) {
     	printf("Error al abrir la base de datos de SQLite.\n");
         return 1;
     }
     // 5. Listen
     listen(server_fd, 3);
-    registrar_log("SERVIDOR: Sistema iniciado y escuchando peticiones.");
+    registrar_log(cfg.log_ruta,"SERVIDOR: Sistema iniciado y escuchando peticiones.");
 
     while(1) {
         nuevo_socket = accept(server_fd, (struct sockaddr*)&direccion, &addrlen);
 
         if (nuevo_socket != INVALID_SOCKET) {
-            registrar_log("CONEXIÓN: Un cliente se ha conectado.");
+            registrar_log(cfg.log_ruta,"CONEXIÓN: Un cliente se ha conectado.");
 
             MensajeRed msg;
             // Bucle para atender múltiples mensajes del mismo cliente
@@ -93,7 +101,7 @@ int main() {
                 switch(msg.tipo) {
 
                 case OP_LOGIN:
-                    registrar_log("OPERACIÓN: Intento de Login.");
+                    registrar_log(cfg.log_ruta,"OPERACIÓN: Intento de Login.");
                     {
                         sscanf(msg.data, "%49[^,],%49s", usuario, contrasenya);
 
@@ -119,16 +127,16 @@ int main() {
 
                         if (encontrado) {
                             snprintf(msg.data, sizeof(msg.data), "Login OK. Bienvenido %s.", nombre_cliente);
-                            registrar_log("LOGIN: Acceso correcto.");
+                            registrar_log(cfg.log_ruta,"LOGIN: Acceso correcto.");
                         } else {
                             snprintf(msg.data, sizeof(msg.data), "Error: El usuario no existe o la clave es incorrecta.");
-                            registrar_log("LOGIN: Acceso denegado.");
+                            registrar_log(cfg.log_ruta,"LOGIN: Acceso denegado.");
                         }
                     }
                     break;
 
                     case OP_REGISTRO:
-                        registrar_log("OPERACIÓN: Registro de nuevo usuario y cuenta.");
+                        registrar_log(cfg.log_ruta,"OPERACIÓN: Registro de nuevo usuario y cuenta.");
 
                         // 1. Extraemos los datos enviados por el cliente ("nombre,apellido,dni,contrasenya")
                         char apellido[50] = {0};
@@ -150,10 +158,10 @@ int main() {
                             // 4. Creamos la cuenta bancaria automáticamente para ese cliente
                             crearCuentaAutomatica(db, id_cliente_generado, msg.data);
 
-                            registrar_log("REGISTRO: Usuario y cuenta creados con éxito.");
+                            registrar_log(cfg.log_ruta,"REGISTRO: Usuario y cuenta creados con éxito.");
                         } else {
                             snprintf(msg.data, sizeof(msg.data), "Error: El nombre de usuario '%s' ya está en uso.", usuario);
-                            registrar_log("REGISTRO: Fallo al insertar usuario.");
+                            registrar_log(cfg.log_ruta,"REGISTRO: Fallo al insertar usuario.");
                         }
 
                         // 5. Enviar respuesta al cliente
@@ -161,7 +169,7 @@ int main() {
                         break;
 
                     case OP_CONSULTAR_CUENTAS:
-                        registrar_log("OPERACION: Consulta de Saldo.");
+                        registrar_log(cfg.log_ruta,"OPERACION: Consulta de Saldo.");
                         {
                             char sql[300];
                             snprintf(sql, sizeof(sql),
@@ -184,7 +192,7 @@ int main() {
                         break;
 
                     case OP_TRANSFERENCIA:
-                        registrar_log("OPERACIÓN: Transferencia.");
+                        registrar_log(cfg.log_ruta,"OPERACIÓN: Transferencia.");
                         {
                             char cuenta_origen[50] = {0};
                             char cuenta_destino[50] = {0};
@@ -253,7 +261,7 @@ int main() {
                                 registrarMovimiento(db, cuenta_destino, "TRANSFERENCIA", cantidad_transferir, cuenta_origen, cuenta_destino);
                                 snprintf(msg.data, sizeof(msg.data), "Transferencia de %.2f EUR de %s a %s realizada con exito.",
                                          cantidad_transferir, cuenta_origen, cuenta_destino);
-                                registrar_log("TRANSFERENCIA realizada con exito.");
+                                registrar_log(cfg.log_ruta,"TRANSFERENCIA realizada con exito.");
                             } else {
                                 sqlite3_exec(db, "ROLLBACK;", NULL, NULL, NULL);
                                 snprintf(msg.data, sizeof(msg.data), "Error: Fallo al realizar la transferencia.");
@@ -262,7 +270,7 @@ int main() {
                         break;
 
                     case OP_DEPOSITAR:
-                        registrar_log("OPERACIÓN: Depósito.");
+                        registrar_log(cfg.log_ruta,"OPERACIÓN: Depósito.");
                         {
                             sscanf(msg.data, "%49[^,],%f", cuenta, &cantidad);
 
@@ -297,7 +305,7 @@ int main() {
                             if (sqlite3_exec(db, sql_update, NULL, NULL, NULL) == SQLITE_OK) {
                                 registrarMovimiento(db, cuenta, "DEPOSITO", cantidad, "EXTERNO", cuenta);
                                 snprintf(msg.data, sizeof(msg.data), "Deposito de %.2f EUR en %s completado.", cantidad, cuenta);
-                                registrar_log("DEPOSITO realizado con exito.");
+                                registrar_log(cfg.log_ruta,"DEPOSITO realizado con exito.");
                             } else {
                                 snprintf(msg.data, sizeof(msg.data), "Error: Fallo al realizar el deposito.");
                             }
@@ -305,7 +313,7 @@ int main() {
                         break;
 
                     case OP_RETIRAR:
-                        registrar_log("OPERACIÓN: Retiro.");
+                        registrar_log(cfg.log_ruta,"OPERACIÓN: Retiro.");
                         {
                             sscanf(msg.data, "%49[^,],%f", cuenta, &cantidad);
 
@@ -345,7 +353,7 @@ int main() {
                             if (sqlite3_exec(db, sql_update, NULL, NULL, NULL) == SQLITE_OK) {
                                 registrarMovimiento(db, cuenta, "RETIRADA", cantidad, cuenta, "EXTERNO");
                                 snprintf(msg.data, sizeof(msg.data), "Retiro de %.2f EUR de %s completado.", cantidad, cuenta);
-                                registrar_log("RETIRO realizado con exito.");
+                                registrar_log(cfg.log_ruta,"RETIRO realizado con exito.");
                             } else {
                                 snprintf(msg.data, sizeof(msg.data), "Error: Fallo al realizar el retiro.");
                             }
@@ -353,7 +361,7 @@ int main() {
                         break;
 
                     case OP_HISTORIAL:
-                        registrar_log("OPERACIÓN: Historial.");
+                        registrar_log(cfg.log_ruta,"OPERACIÓN: Historial.");
                         {
                             char sql[300];
                             snprintf(sql, sizeof(sql),
@@ -390,7 +398,7 @@ int main() {
                         break;
 
                     case OP_SALIR:
-                        registrar_log("CONEXIÓN: Cliente pidió salir.");
+                        registrar_log(cfg.log_ruta,"CONEXIÓN: Cliente pidió salir.");
                         closesocket(nuevo_socket);
                         goto siguiente_cliente;
 
@@ -402,7 +410,7 @@ int main() {
                 send(nuevo_socket, (char*)&msg, sizeof(msg), 0);
             }
 
-            registrar_log("CONEXIÓN: Cliente desconectado.");
+            registrar_log(cfg.log_ruta,"CONEXIÓN: Cliente desconectado.");
             closesocket(nuevo_socket);
             siguiente_cliente:;
         }

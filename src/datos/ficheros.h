@@ -13,6 +13,6 @@
 
 int abrirDB(const char *ruta, sqlite3 **db);
 int crearTablas(sqlite3 *db);
-void registrar_log(const char* mensaje);
+void registrar_log(const char *ruta_log, const char *mensaje);
 
 #endif /* SRC_FICHEROS_H_ */

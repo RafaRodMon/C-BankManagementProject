@@ -1,3 +1,5 @@
-PUERTO=8080
-DB_PATH=banco.db
-LOG_PATH=server.log
+admin_usuario=admin
+admin_password=1234
+db_ruta=data/banco.db
+log_ruta=data/server.log
+puerto=8080

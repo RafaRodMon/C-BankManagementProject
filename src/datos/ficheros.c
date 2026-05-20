@@ -66,12 +66,12 @@ int crearTablas(sqlite3 *db) {
 }
 
 
-void registrar_log(const char* mensaje) {
-    FILE* f = fopen("server.log", "a");
+void registrar_log(const char *ruta_log, const char *mensaje) {
+    FILE* f = fopen(ruta_log, "a");
     if (f) {
         time_t ahora = time(NULL);
         char* fecha = ctime(&ahora);
-        fecha[strlen(fecha)-1] = '\0'; // Quitar salto de línea
+        fecha[strlen(fecha)-1] = '\0';
         fprintf(f, "[%s] %s\n", fecha, mensaje);
         fclose(f);
     }

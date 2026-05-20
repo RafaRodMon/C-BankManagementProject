@@ -39,6 +39,9 @@ int cargarConfig(const char *ruta, Config *cfg) {
 		if (strcmp(clave, "log_ruta") == 0) {
 		    strcpy(cfg->log_ruta, valor);
 		}
+		if (strcmp(clave, "puerto") == 0) {
+		    cfg->puerto = atoi(valor);
+		}
 	}
 
 	fclose(fichero);

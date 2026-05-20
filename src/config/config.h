@@ -13,6 +13,7 @@ typedef struct {
     char admin_password[50];
     char db_ruta[100];
     char log_ruta[100];
+    int puerto;
 } Config;
 
 int cargarConfig(const char *ruta, Config *cfg);
